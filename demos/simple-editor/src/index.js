@@ -17,6 +17,7 @@ import {
   uprtclModule,
   UprtclEthereum,
   UprtclHolochain,
+  UprtclHttp,
   UprtclTypes,
   updatePlugin
 } from '@uprtcl/common';
@@ -29,9 +30,8 @@ import { SimpleEditor } from './simple-editor';
     protocol: 'https'
   };
 
-  const uprtclProvider = new UprtclHolochain({
-    host: 'ws://localhost:8888',
-    instance: 'test-instance'
+  const uprtclProvider = new UprtclHttp({
+    host: 'http://localhost:3100'
   });
 
   const documentsProvider = new DocumentsIpfs(ipfsConfig);

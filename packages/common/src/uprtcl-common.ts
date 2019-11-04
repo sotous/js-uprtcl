@@ -9,6 +9,7 @@ export { UprtclRemote } from './uprtcl/services/uprtcl.remote';
 
 export { UprtclHolochain } from './uprtcl/services/providers/holochain/uprtcl.holochain';
 export { UprtclEthereum } from './uprtcl/services/providers/ethereum/uprtcl.ethereum';
+export { UprtclHttp } from './uprtcl/services/providers/http/uprtcl.http';
 
 export { uprtclModule } from './uprtcl/uprtcl.module';
 
