@@ -15,11 +15,15 @@ export class UprtclHttp implements UprtclRemote {
   proposals: ProposalProvider | undefined;
 
   constructor (protected host: string, jwt: string) {
-    this.connection = new HttpConnection(host, jwt);
+    this.connection = new HttpConnection(host, jwt, {});
   }
   
-  get<T extends object>(hash: string): Promise<Hashed<T> | undefined> {
-    return this.connection.get<Object>('/get');
+  async get<T extends object>(hash: string): Promise<Hashed<T> | undefined> {
+    const object = await this.connection.get<any>(`/get/${hash}`);
+    return {
+      id: hash,
+      object: object
+    }
   }
 
   ready(): Promise<void> {
