@@ -1,4 +1,4 @@
-import { Connection, ConnectionOptions } from './connection';
+import { Connection, ConnectionOptions } from '../../connections/connection';
 
 /**
  * Wrapper over the fetch API

@@ -24,21 +24,16 @@ import {
 import { SimpleEditor } from './simple-editor';
 
 (async function() {
-  const ipfsConfig = {
-    host: 'ipfs.infura.io',
-    port: 5001,
-    protocol: 'https'
-  };
-
   const uprtclProvider = new UprtclHttp({
     host: 'http://localhost:3100'
   });
 
-  const documentsProvider = new DocumentsIpfs(ipfsConfig);
+  const documentsProvider = new DocumentsHttp(
+    host: 'http://localhost:3100'
+  );
 
   const knownSources = new KnownSourcesHolochain({
-    host: 'ws://localhost:8888',
-    instance: 'test-instance'
+    host: 'http://localhost:3100'
   });
 
   const discoverableUprtcl = { service: uprtclProvider, knownSources: knownSources };
