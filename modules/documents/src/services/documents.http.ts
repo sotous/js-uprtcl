@@ -18,8 +18,16 @@ export class DocumentsHttp implements DocumentsProvider {
     this.connection = new HttpConnection(host, jwt, {});
   }
 
-  get<T extends object>(hash: string): Promise<Hashed<T> | undefined> {
-    return this.connection.get<T>(`/data/${hash}`);
+  ready(): Promise<void> {
+    return Promise.resolve();
+  }
+
+  async get<T extends object>(hash: string): Promise<Hashed<T> | undefined> {
+    const object = await this.connection.get<T>(`/data/${hash}`);
+    return {
+      id: hash,
+      object: object
+    }
   }
 
   

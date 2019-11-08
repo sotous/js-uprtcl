@@ -11,8 +11,8 @@ import {
   actionsPlugin,
   lensSelectorPlugin
 } from '@uprtcl/cortex';
-import { DocumentsIpfs, documentsModule, DocumentsTypes } from '@uprtcl/documents';
-import { KnownSourcesHolochain } from '@uprtcl/connections';
+import { DocumentsIpfs, DocumentsHttp, documentsModule, DocumentsTypes } from '@uprtcl/documents';
+import { KnownSourcesHolochain, KnownSourcesHttp } from '@uprtcl/connections';
 import {
   uprtclModule,
   UprtclEthereum,
@@ -24,18 +24,11 @@ import {
 import { SimpleEditor } from './simple-editor';
 
 (async function() {
-  const uprtclProvider = new UprtclHttp({
-    host: 'http://localhost:3100'
-  });
-
-  const documentsProvider = new DocumentsHttp(
-    host: 'http://localhost:3100'
-  );
-
-  const knownSources = new KnownSourcesHolochain({
-    host: 'http://localhost:3100'
-  });
-
+  const c1host = 'http://localhost:3100/uprtcl/1'
+  const uprtclProvider = new UprtclHttp(`${c1host}`, '');
+  const documentsProvider = new DocumentsHttp(`${c1host}`, '');
+  const knownSources = new KnownSourcesHttp(`${c1host}`, '');
+  
   const discoverableUprtcl = { service: uprtclProvider, knownSources: knownSources };
 
   const uprtcl = uprtclModule([discoverableUprtcl]);
