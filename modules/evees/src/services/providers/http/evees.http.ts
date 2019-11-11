@@ -1,17 +1,18 @@
-import { UprtclRemote } from "../../uprtcl.remote";
-import { Logger } from "@uprtcl/micro-orchestrator";
 import { HttpConnection } from "@uprtcl/connections";
-import { Perspective, PerspectiveDetails, Commit, Context } from './../../../../types'; 
-import { AccessControlService } from "../../../../access-control/services/access-control.service";
-import { ProposalProvider } from "../../proposal.provider";
-import { Hashed } from "@uprtcl/cortex";
+import { Logger } from '@uprtcl/micro-orchestrator';
+import { Hashed } from '@uprtcl/cortex';
+import { BasicAdminAccessControlService } from '@uprtcl/common';
 
-export class UprtclHttp implements UprtclRemote {
+import { ProposalProvider } from "../../proposal.provider";
+import { EveesRemote } from "../../evees.remote";
+import { PerspectiveDetails } from "../../../types";
+
+export class EveesHttp implements EveesRemote {
     
-  uprtcl_api: string = 'uprtcl-v1';
+  evees_api: string = 'uprtcl-v1';
   connection!: HttpConnection;
-  logger = new Logger('HTTP-UPRTCL-PROVIDER');
-  accessControl: AccessControlService | undefined;
+  logger = new Logger('HTTP-EVEES-PROVIDER');
+  accessControl: BasicAdminAccessControlService | undefined;
   proposals: ProposalProvider | undefined;
 
   constructor (protected host: string, jwt: string) {
@@ -31,24 +32,23 @@ export class UprtclHttp implements UprtclRemote {
   }
 
   get name() : string {
-    return `http:${this.uprtcl_api}:+${this.host}`;
+    return `http:${this.evees_api}:+${this.host}`;
   } 
 
   configure(sourceName: string): boolean {
     throw new Error("Method not implemented.");
   }
 
-  clonePerspective(perspective: any): Promise<void> {
-    const result = this.connection.post('/persp', perspective);
-    return result.elementIds[0];
+  async clonePerspective(perspective: any): Promise<void> {
+    await this.connection.post('/persp', perspective);
   }
 
-  cloneCommit(commit: any): Promise<void> {
-    return this.connection.post('/commit', commit);
+  async cloneCommit(commit: any): Promise<void> {
+    await this.connection.post('/commit', commit);
   }
 
-  updatePerspectiveDetails(perspectiveId: string, details: Partial<PerspectiveDetails>): Promise<void> {
-    return this.connection.put(`/persp/${perspectiveId}/details`, details);
+  async updatePerspectiveDetails(perspectiveId: string, details: Partial<PerspectiveDetails>): Promise<void> {
+    await this.connection.put(`/persp/${perspectiveId}/details`, details);
   }
 
   getContextPerspectives(context: string): Promise<any[]> {

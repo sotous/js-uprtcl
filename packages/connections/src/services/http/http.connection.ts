@@ -44,9 +44,16 @@ export class HttpConnection extends Connection {
     return fetch(this.baseUrl + url, {
       method: 'GET',
       headers: this.headers
-    }).then(response => {
-      this.logger.log('GET Result: ', url);
-      return (response.json() as unknown) as T;
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(response.statusText);
+      }
+      return response.json() as Promise<{ data: T }>;
+    })
+    .then(data => {
+      console.log('[HTTP GET RESULT] ', url, data);
+      return data.data;
     });
   }
 
@@ -83,10 +90,12 @@ export class HttpConnection extends Connection {
         Accept: 'application/json'
       },
       body: JSON.stringify(body)
-    }).then(result => {
-      this.logger.log('POST Result: ', result);
-
-      return (result.body as unknown) as PostResult;
+    })
+    .then(response => {
+      return response.json() as Promise<PostResult>;
+    })
+    .then(data => {
+       return (data as unknown) as PostResult;
     });
   }
 }

@@ -31,10 +31,11 @@ export class DocumentsHttp implements DocumentsProvider {
   }
 
   
-  createTextNode(node: TextNode): Promise<string> {
-    return this.connection.post(`/data`, {
+  async createTextNode(node: TextNode): Promise<string> {
+    const result = await this.connection.post(`/data`, {
       type: DataType.DOCUMENT_NODE,
       data: node
     });
+    return result.elementIds[0];
   }
 }
