@@ -39,7 +39,8 @@ export class UprtclHttp implements UprtclRemote {
   }
 
   clonePerspective(perspective: any): Promise<void> {
-    return this.connection.post('/persp', perspective);
+    const result = this.connection.post('/persp', perspective);
+    return result.elementIds[0];
   }
 
   cloneCommit(commit: any): Promise<void> {

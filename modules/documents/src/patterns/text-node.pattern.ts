@@ -43,7 +43,6 @@ export class TextNodePattern
     const type = node && node.type ? node.type : TextType.Paragraph;
 
     const newTextNode = { links, text, type };
-
     const hash = await this.documentsProvider.service.createTextNode(newTextNode);
 
     return {

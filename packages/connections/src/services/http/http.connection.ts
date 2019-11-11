@@ -1,5 +1,12 @@
 import { Connection, ConnectionOptions } from '../../connections/connection';
 
+
+export interface PostResult {
+  result: string;
+  message: string;
+  elementIds: string[];
+}
+
 /**
  * Wrapper over the fetch API
  */
@@ -48,7 +55,7 @@ export class HttpConnection extends Connection {
    * @param url url to make the request to
    * @param body body of the request
    */
-  public async put<T>(url: string, body: any): Promise<T> {
+  public async put(url: string, body: any): Promise<PostResult> {
     return this.putOrPost(url, body, 'PUT');
   }
 
@@ -57,7 +64,7 @@ export class HttpConnection extends Connection {
    * @param url url to make the request to
    * @param body body of the request
    */
-  public async post<T>(url: string, body: any): Promise<T> {
+  public async post(url: string, body: any): Promise<PostResult> {
     return this.putOrPost(url, body, 'POST');
   }
 
@@ -67,7 +74,7 @@ export class HttpConnection extends Connection {
    * @param body body of the request
    * @param method method of the request ('POST' or 'PUT')
    */
-  public async putOrPost<T>(url: string, body: any, method: string): Promise<T> {
+  public async putOrPost(url: string, body: any, method: string): Promise<PostResult> {
     this.logger.log('POST: ', url, body, method);
     return fetch(this.baseUrl + url, {
       method: method,
@@ -77,9 +84,9 @@ export class HttpConnection extends Connection {
       },
       body: JSON.stringify(body)
     }).then(result => {
-      this.logger.log('POST Result: ', url, body, method);
+      this.logger.log('POST Result: ', result);
 
-      return (result as unknown) as T;
+      return (result.body as unknown) as PostResult;
     });
   }
 }
