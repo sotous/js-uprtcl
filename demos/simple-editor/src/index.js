@@ -3,39 +3,29 @@ import {
   PatternTypes,
   PatternsModule,
   discoveryModule,
-  lensesModule,
-  entitiesReduxModule,
-  EntitiesTypes,
   DiscoveryTypes,
-  LensesTypes,
-  actionsPlugin,
-  lensSelectorPlugin
+  LensesTypes
 } from '@uprtcl/cortex';
-import { DocumentsIpfs, DocumentsHttp, documentsModule, DocumentsTypes } from '@uprtcl/documents';
-import { KnownSourcesHolochain, KnownSourcesHttp } from '@uprtcl/connections';
+import { DocumentsHttp, documentsModule, DocumentsTypes } from '@uprtcl/documents';
+import { KnownSourcesHttp } from '@uprtcl/connections';
 import {
-  uprtclModule,
-  UprtclEthereum,
-  UprtclHolochain,
-  UprtclHttp,
-  UprtclTypes,
   updatePlugin
 } from '@uprtcl/common';
+import { eveesModule, EveesHttp } from '@uprtcl/evees';
 import { SimpleEditor } from './simple-editor';
 
 (async function() {
   const c1host = 'http://localhost:3100/uprtcl/1'
-  const uprtclProvider = new UprtclHttp(`${c1host}`, '');
+  const eveesProvider = new EveesHttp(`${c1host}`, '');
   const documentsProvider = new DocumentsHttp(`${c1host}`, '');
   const knownSources = new KnownSourcesHttp(`${c1host}`, '');
   
-  const discoverableUprtcl = { service: uprtclProvider, knownSources: knownSources };
+  const discoverableEvees = { service: eveesProvider, knownSources: knownSources };
 
-  const uprtcl = uprtclModule([discoverableUprtcl]);
+  const evees = eveesModule([discoverableEvees]);
 
   const discoverableDocs = {
-    service: documentsProvider,
-    knownSources: knownSources
+    service: documentsProvider
   };
   const documents = documentsModule([discoverableDocs]);
 
@@ -49,11 +39,12 @@ import { SimpleEditor } from './simple-editor';
     { id: EntitiesTypes.Module, module: entitiesReducerModule },
     { id: PatternTypes.Module, module: PatternsModule },
     { id: DiscoveryTypes.Module, module: discovery },
+    { id: AccessControlTypes.Module, module: accessControlReduxModule() },
     {
       id: LensesTypes.Module,
       module: lensesModule([updatePlugin(), lensSelectorPlugin(), actionsPlugin()])
     },
-    { id: UprtclTypes.Module, module: uprtcl },
+    { id: EveesTypes.Module, module: evees },
     { id: DocumentsTypes.Module, module: documents }
   );
 
