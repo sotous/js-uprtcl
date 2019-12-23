@@ -7,7 +7,7 @@ import { SlotPlugin } from '../slot.plugin';
 export class ActionsPlugin implements SlotPlugin {
   renderSlot(entity: Hashed<any>) {
     return html`
-      <cortex-actions .hash=${entity.id} toolbar="none"></cortex-actions>
+      <cortex-actions .hash=${entity.id}></cortex-actions>
     `;
   }
 }

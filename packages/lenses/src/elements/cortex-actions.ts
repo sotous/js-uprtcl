@@ -91,6 +91,24 @@ export class CortexActions extends moduleConnect(LitElement) {
         .divider {
           opacity: 0.3;
         }
+
+        .row {
+          flex: 0 1 0;
+        }
+
+        .container {
+          overflow: hidden;
+          height: 48px;
+        }
+
+        .toolbar {
+          flex: 0 1 0;
+          justify-content: end;
+          align-items: center;
+          flex-wrap: wrap;
+          height: auto;
+        }
+
       `
     ];
   }
@@ -101,13 +119,6 @@ export class CortexActions extends moduleConnect(LitElement) {
     else return Object.keys(this.actions).sort();
   }
 
-  getToolbarActions(): PatternAction[][] {
-    const actions = this.actions;
-    if (!actions) return [];
-
-    return Object.keys(actions).map(key => actions[key]);
-  }
-
   getMenuActions(): PatternAction[][] {
     const actions = this.actions;
     if (!actions) return [];
@@ -116,11 +127,14 @@ export class CortexActions extends moduleConnect(LitElement) {
   }
 
   getAllActions(): PatternAction[][] {
-    return [];
+    const actions = this.actions;
+    if (!actions) return [];
+
+    return Object.keys(actions).map(key => actions[key]);
   }
 
   renderIconTextToolbar() {
-    const toolbarActions = this.getToolbarActions();
+    const toolbarActions = this.getAllActions();
 
     return html`
       ${toolbarActions.map(
@@ -145,7 +159,7 @@ export class CortexActions extends moduleConnect(LitElement) {
   }
 
   renderOnlyIconToolbar() {
-    const toolbarActions = this.getToolbarActions();
+    const toolbarActions = this.getAllActions();
 
     return html`
       ${toolbarActions.map(
@@ -205,15 +219,27 @@ export class CortexActions extends moduleConnect(LitElement) {
     `;
   }
 
-  renderToolbar() {
+  renderToolbarContent() {
     if (this.toolbar === 'only-icon') return this.renderOnlyIconToolbar();
     else if (this.toolbar === 'icon-text') return this.renderIconTextToolbar();
+    else if (this.toolbar === 'responsive') return this.renderIconTextToolbar();
     else return html``;
+  }
+
+  renderToolbar() {
+    const toolbarContent = this.renderToolbarContent();
+
+    return html`
+      <div class="toolbar row">
+        <span style="flex: 0 1 0; width: 0;"></span>
+        ${toolbarContent}
+      </div>
+    `;
   }
 
   render() {
     return html`
-      <div class="row center-content">
+      <div class="row container">
         ${this.renderToolbar()} ${this.renderMenu()}
       </div>
     `;
