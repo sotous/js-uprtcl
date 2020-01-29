@@ -122,10 +122,12 @@ export class EveesInfo extends moduleConnect(LitElement) {
   }
 
   async otherPerspectiveMerge(e: CustomEvent) {
-    this.logger.info(`merge ${e.detail.id} on ${this.perspectiveId}`);
+
+    const fromPerspectiveId = e.detail.id;
+    this.logger.info(`merge ${fromPerspectiveId} on ${this.perspectiveId}`);
 
     const merge: MergeStrategy = this.request(EveesBindings.MergeStrategy);
-    const updateRequests = await merge.mergePerspectives(this.perspectiveId, e.detail.id);
+    const updateRequests = await merge.mergePerspectives(this.perspectiveId, fromPerspectiveId);
 
     this.logger.info('merge computed', { updateRequests });
 
@@ -171,7 +173,7 @@ export class EveesInfo extends moduleConnect(LitElement) {
       if (!remote.proposals) throw new Error('remote cant handle proposals');
 
       const updateRequests = updatesByAuthority[authority].updateRequests;
-      const requestId = remote.proposals.createProposal(updateRequests);
+      const requestId = remote.proposals.createProposal(this.perspectiveId, fromPerspectiveId, updateRequests);
       
       this.logger.info('created proposal', { requestId, updateRequests });
     })

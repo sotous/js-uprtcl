@@ -6,7 +6,6 @@ import { EveesModule, CREATE_COMMIT, CREATE_PERSPECTIVE } from '@uprtcl/evees';
 import { WikisModule, CREATE_WIKI } from '@uprtcl/wikis';
 import { DocumentsModule } from '@uprtcl/documents';
 
-
 export class SimpleWiki extends moduleConnect(LitElement) {
   static get properties() {
     return {
@@ -33,20 +32,18 @@ export class SimpleWiki extends moduleConnect(LitElement) {
   }
 
   async firstUpdated() {
-    this.wikisProvider = this.requestAll(WikisModule.bindings.WikisRemote).find(provider => {
-      const regexp = new RegExp('^http');
-      return regexp.test(provider.authority);
-    });
+    debugger
+    this.wikisProvider = this.requestAll(WikisModule.bindings.WikisRemote).find(provider =>
+      provider.source.startsWith('ipfs')
+    );
 
-    this.docsProvider = this.requestAll(DocumentsModule.bindings.DocumentsRemote).find(provider => {
-      const regexp = new RegExp('^http');
-      return regexp.test(provider.authority);
-    });
+    this.docsProvider = this.requestAll(DocumentsModule.bindings.DocumentsRemote).find(provider => 
+      provider.source.startsWith('ipfs')
+    );
 
-    this.eveesProvider = this.requestAll(EveesModule.bindings.EveesRemote).find(provider => {
-      const regexp = new RegExp('^http');
-      return regexp.test(provider.authority);
-    });
+    this.eveesProvider = this.requestAll(EveesModule.bindings.EveesRemote).find(provider => 
+      provider.authority.startsWith('eth')
+    );
 
     window.addEventListener('popstate', () => {
       this.rootHash = window.location.href.split('id=')[1];
@@ -57,10 +54,8 @@ export class SimpleWiki extends moduleConnect(LitElement) {
     });
 
     if (window.location.href.includes('?id=')) {
-      
       this.rootHash = window.location.href.split('id=')[1];
     } else {
-
       const client = this.request(ApolloClientModule.bindings.Client);
       const result = await client.mutate({
         mutation: CREATE_WIKI,
