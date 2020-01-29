@@ -32,7 +32,7 @@ export class SimpleWiki extends moduleConnect(LitElement) {
   }
 
   async firstUpdated() {
-    debugger
+    
     this.wikisProvider = this.requestAll(WikisModule.bindings.WikisRemote).find(provider =>
       provider.source.startsWith('ipfs')
     );

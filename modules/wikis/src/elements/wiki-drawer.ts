@@ -8,7 +8,7 @@ import '@material/mwc-ripple';
 import { CREATE_COMMIT, CREATE_PERSPECTIVE, UPDATE_HEAD, RemoteMap, EveesModule, EveesRemote } from '@uprtcl/evees';
 import { TextType, CREATE_TEXT_NODE, DocumentsModule, htmlToText } from '@uprtcl/documents';
 import { ApolloClientModule } from '@uprtcl/graphql';
-import { moduleConnect } from '@uprtcl/micro-orchestrator';
+import { moduleConnect, Logger } from '@uprtcl/micro-orchestrator';
 import { sharedStyles } from '@uprtcl/lenses';
 
 import { Wiki } from '../types';
@@ -17,14 +17,14 @@ import { Entity } from '@uprtcl/cortex';
 import { Source } from '@uprtcl/multiplatform';
 
 export class WikiDrawer extends moduleConnect(LitElement) {
+
+  logger = new Logger('WIKI-DRAWER');
+
   @property({ type: String, attribute: 'wiki-id' })
   wikiId!: string;
 
   @property({ type: Object })
   wiki: Wiki | undefined = undefined;
-
-  @property({ type: Boolean })
-  editable: boolean = true;
 
   currentHead: string | undefined = undefined;
   perspectiveOrigin: string | undefined = undefined;
@@ -32,7 +32,10 @@ export class WikiDrawer extends moduleConnect(LitElement) {
   @property({ type: String })
   selectedPageHash: string | undefined = undefined;
 
-  @property({ type: String })
+  @property({ type: Boolean, attribute: false })
+  editable: boolean = false;
+
+  @property({ type: String, attribute: false })
   pagesList: Array<{ title: string; id: string }> | undefined = undefined;
 
   async createPage() {
@@ -164,12 +167,29 @@ export class WikiDrawer extends moduleConnect(LitElement) {
                 }
               }
             }
+            _context {
+              patterns {
+                accessControl {
+                  canWrite
+                }
+              }
+            }
           }
         }
       }`
     });
 
     const wiki = result.data.entity.head.data;
+
+    if (result.data.entity._context.patterns.accessControl == null) {
+      /** temporary while access control is pluged in */
+      this.logger.warn(`unknown access control for entity ${this.wikiId}`);
+      this.editable = true;
+    } else {
+      this.editable = result.data.entity._context.patterns.accessControl.canWrite;
+    }
+    
+    console.log('[WIKI] can write', this.editable );
 
     this.perspectiveOrigin = result.data.entity.payload.origin;
 
