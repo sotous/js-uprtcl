@@ -213,7 +213,7 @@ export const eveesResolvers = {
 
     async addProposal(
       _,
-      { toPerspectiveId, fromPerspectiveId, updateRequests },
+      { toPerspectiveId, fromPerspectiveId, toHeadId, fromHeadId, updateRequests },
       { container }
     ) {
       const evees: Evees = container.get(EveesBindings.Evees);
@@ -221,16 +221,22 @@ export const eveesResolvers = {
       const remote = await evees.getPerspectiveProviderById(toPerspectiveId);
       if (!remote.proposals) throw new Error('remote cant handle proposals');
 
+      debugger
+
       const proposalId = await remote.proposals.createProposal(
         fromPerspectiveId,
         toPerspectiveId,
+        fromHeadId,
+        toHeadId,
         updateRequests
       );
 
       return {
         id: proposalId,
-        toPerspectiveId: toPerspectiveId,
-        fromPerspectiveId: fromPerspectiveId,
+        toPerspectiveId,
+        fromPerspectiveId,
+        fromHeadId,
+        toHeadId,
         updates: updateRequests,
         authorized: false,
         canAuthorize: false,

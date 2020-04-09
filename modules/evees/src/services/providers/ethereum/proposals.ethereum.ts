@@ -30,6 +30,8 @@ export class ProposalsEthereum implements ProposalsProvider {
   async createProposal(
     fromPerspectiveId: string,
     toPerspectiveId: string,
+    fromHeadId: string,
+    toHeadId: string,
     headUpdates: UpdateRequest[]
   ): Promise<string> {
     await this.ready();
@@ -79,6 +81,8 @@ export class ProposalsEthereum implements ProposalsProvider {
     const proposal = {
       toPerspectiveId: toPerspectiveId, 
       fromPerspectiveId: fromPerspectiveId, 
+      toHeadId: toHeadId,
+      fromHeadId: fromHeadId,
       owner: accessData.owner, 
       nonce: nonce, 
       headUpdates: ethHeadUpdates, 
@@ -100,6 +104,8 @@ export class ProposalsEthereum implements ProposalsProvider {
     await this.ready();
 
     this.logger.info('getProposal() - pre', { requestId });
+
+    debugger
 
     const request = await this.uprtclProposals.call(
       GET_PROPOSAL, 
@@ -128,6 +134,8 @@ export class ProposalsEthereum implements ProposalsProvider {
       creatorId: '',
       toPerspectiveId: request.toPerspectiveId,
       fromPerspectiveId: request.fromPerspectiveId,
+      toHeadId: request.toHeadId,
+      fromHeadId: request.fromHeadId,
       updates: updates,
       status: request.status === '1',
       authorized: request.authorized === '1',

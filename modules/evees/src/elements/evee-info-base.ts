@@ -234,7 +234,40 @@ export class EveesInfoBase extends moduleConnect(LitElement) {
     );
 
     if (isProposal) {
-      await this.createMergeProposal(fromPerspectiveId, toPerspectiveId, actions);
+      debugger
+      if(!this.client) throw new Error('client undefined');
+      const resultFrom = await this.client.query({
+        query: gql`
+          {
+            entity(id: "${fromPerspectiveId}") {
+              id
+              ... on Perspective {
+                head {
+                  id
+                }
+              }
+            }
+          }`
+      });
+
+      const resultTo = await this.client.query({
+        query: gql`
+          {
+            entity(id: "${toPerspectiveId}") {
+              id
+              ... on Perspective {
+                head {
+                  id
+                }
+              }
+            }
+          }`
+      });
+
+      const fromHeadId = resultFrom.data.entity.head.id;
+      const toHeadId = resultTo.data.entity.head.id;
+
+      await this.createMergeProposal(fromPerspectiveId, toPerspectiveId, fromHeadId, toHeadId, actions);      
     } else {
       await this.mergePerspective(actions);
     }
@@ -322,7 +355,13 @@ export class EveesInfoBase extends moduleConnect(LitElement) {
     return Promise.all(executePromises);
   }
 
-  async createMergeProposal(fromPerspectiveId: string, toPerspectiveId: string, actions: UprtclAction[]): Promise<void> {
+  async createMergeProposal(
+    fromPerspectiveId: string, 
+    toPerspectiveId: string, 
+    fromHeadId: string, 
+    toHeadId: string, 
+    actions: UprtclAction[]): Promise<void> {
+
     if(!this.client) throw new Error('client undefined');
     if(!this.cache) throw new Error('cache undefined');
     if(!this.recognizer) throw new Error('recognizer undefined');
@@ -372,6 +411,8 @@ export class EveesInfoBase extends moduleConnect(LitElement) {
           variables: {
             toPerspectiveId: toPerspectiveId, 
             fromPerspectiveId: fromPerspectiveId, 
+            toHeadId: toHeadId,
+            fromHeadId: fromHeadId,
             updateRequests: actions.map(action => action.payload)
           }
         });

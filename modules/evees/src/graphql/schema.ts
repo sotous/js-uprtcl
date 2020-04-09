@@ -36,6 +36,8 @@ export const eveesTypeDefs: DocumentNode = gql`
     addProposal(
       toPerspectiveId: ID!, 
       fromPerspectiveId: ID!, 
+      toHeadId: ID!, 
+      fromHeadId: ID!, 
       updateRequests: [HeadUpdateInput!]): UpdateProposal!
 
     authorizeProposal(
@@ -74,6 +76,8 @@ export const eveesTypeDefs: DocumentNode = gql`
     creatorId: String
     toPerspective: Perspective! @discover
     fromPerspective: Perspective! @discover
+    toHead: Commit! @discover
+    fromHead: Commit! @discover
     updates: [HeadUpdate!]
     authorized: Boolean,
     canAuthorize: Boolean,

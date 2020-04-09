@@ -183,9 +183,9 @@ export class PerspectivesList extends moduleConnect(LitElement) {
             ... on Perspective {
               proposals {
                 id
-                fromPerspective {
-                  id
-                }
+                fromPerspective { id }
+                fromHead { id }
+                toHead { id }
                 authorized
                 canAuthorize
                 executed
@@ -196,11 +196,15 @@ export class PerspectivesList extends moduleConnect(LitElement) {
         }`
     });
 
+    debugger
+
     const proposals = result.data.entity.proposals.map(
       (prop): Proposal => {
         return {
           id: prop.id,
           fromPerspectiveId: prop.fromPerspective.id,
+          toHeadId: prop.toHead.id,
+          fromHeadId: prop.fromHead.id,
           authorized: prop.authorized,
           canAuthorize: prop.canAuthorize,
           executed: prop.executed
@@ -209,8 +213,8 @@ export class PerspectivesList extends moduleConnect(LitElement) {
     );
 
     /** data on other perspectives (proposals are injected on them) */
-    this.pendingProposals = proposals.filter(proposal => proposal.executed === 0);
-    this.mergedProposals = proposals.filter(proposal => proposal.executed === 1);
+    this.pendingProposals = proposals.filter(proposal => proposal.executed !== true);
+    this.mergedProposals = proposals.filter(proposal => proposal.executed === true);
 
     this.loadingProposals = false;
 
