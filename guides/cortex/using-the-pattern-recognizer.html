@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Using the Pattern Recognizer | The Underscore Protocol</title>
+    <meta name="description" content="Documentation site for the _Prtcl">
+    <meta name="generator" content="VuePress 1.3.1">
+    <link rel="icon" type="image/png" href="/js-uprtcl/favicon.png">
+    
+    <link rel="preload" href="/js-uprtcl/assets/css/0.styles.40a2b895.css" as="style"><link rel="preload" href="/js-uprtcl/assets/js/app.bc6e032e.js" as="script"><link rel="preload" href="/js-uprtcl/assets/js/2.9a3fecf1.js" as="script"><link rel="preload" href="/js-uprtcl/assets/js/14.91fad0c9.js" as="script"><link rel="prefetch" href="/js-uprtcl/assets/js/10.2aeedd5b.js"><link rel="prefetch" href="/js-uprtcl/assets/js/11.6e34884f.js"><link rel="prefetch" href="/js-uprtcl/assets/js/12.ad8b83c3.js"><link rel="prefetch" href="/js-uprtcl/assets/js/13.55e08e70.js"><link rel="prefetch" href="/js-uprtcl/assets/js/15.96885a09.js"><link rel="prefetch" href="/js-uprtcl/assets/js/16.1d8b8264.js"><link rel="prefetch" href="/js-uprtcl/assets/js/17.56990f86.js"><link rel="prefetch" href="/js-uprtcl/assets/js/18.a2ee037d.js"><link rel="prefetch" href="/js-uprtcl/assets/js/19.e701a858.js"><link rel="prefetch" href="/js-uprtcl/assets/js/20.183447fd.js"><link rel="prefetch" href="/js-uprtcl/assets/js/21.11ed72b0.js"><link rel="prefetch" href="/js-uprtcl/assets/js/22.2346c8fd.js"><link rel="prefetch" href="/js-uprtcl/assets/js/23.37f10dd4.js"><link rel="prefetch" href="/js-uprtcl/assets/js/24.5efcd1b3.js"><link rel="prefetch" href="/js-uprtcl/assets/js/25.68bca7fd.js"><link rel="prefetch" href="/js-uprtcl/assets/js/26.ea822e9f.js"><link rel="prefetch" href="/js-uprtcl/assets/js/27.6cbacf6f.js"><link rel="prefetch" href="/js-uprtcl/assets/js/28.11b7d43d.js"><link rel="prefetch" href="/js-uprtcl/assets/js/29.52e7e015.js"><link rel="prefetch" href="/js-uprtcl/assets/js/3.79262c65.js"><link rel="prefetch" href="/js-uprtcl/assets/js/30.e0095fbf.js"><link rel="prefetch" href="/js-uprtcl/assets/js/31.29c932a2.js"><link rel="prefetch" href="/js-uprtcl/assets/js/32.7147fa5e.js"><link rel="prefetch" href="/js-uprtcl/assets/js/33.e75074b2.js"><link rel="prefetch" href="/js-uprtcl/assets/js/34.3bad811d.js"><link rel="prefetch" href="/js-uprtcl/assets/js/35.08d16d30.js"><link rel="prefetch" href="/js-uprtcl/assets/js/36.c566812b.js"><link rel="prefetch" href="/js-uprtcl/assets/js/37.d0071fa5.js"><link rel="prefetch" href="/js-uprtcl/assets/js/38.c03b61b3.js"><link rel="prefetch" href="/js-uprtcl/assets/js/39.402948dc.js"><link rel="prefetch" href="/js-uprtcl/assets/js/4.37584ff7.js"><link rel="prefetch" href="/js-uprtcl/assets/js/5.7c3f7522.js"><link rel="prefetch" href="/js-uprtcl/assets/js/6.8b367ebb.js"><link rel="prefetch" href="/js-uprtcl/assets/js/7.bf45ded8.js"><link rel="prefetch" href="/js-uprtcl/assets/js/8.d8c5d1e5.js"><link rel="prefetch" href="/js-uprtcl/assets/js/9.9c545576.js">
+    <link rel="stylesheet" href="/js-uprtcl/assets/css/0.styles.40a2b895.css">
+  </head>
+  <body>
+    <div id="app" data-server-rendered="true"><div class="theme-container"><header class="navbar"><div class="sidebar-button"><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" viewBox="0 0 448 512" class="icon"><path fill="currentColor" d="M436 124H12c-6.627 0-12-5.373-12-12V80c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12z"></path></svg></div> <a href="/js-uprtcl/" class="home-link router-link-active"><img src="/js-uprtcl/logo.png" alt="The Underscore Protocol" class="logo"> <span class="site-name can-hide">The Underscore Protocol</span></a> <div class="links"><div class="search-box"><input aria-label="Search" autocomplete="off" spellcheck="false" value=""> <!----></div> <nav class="nav-links can-hide"><div class="nav-item"><a href="/js-uprtcl/" class="nav-link">
+  Home
+</a></div><div class="nav-item"><a href="/js-uprtcl/guides/" class="nav-link router-link-active">
+  Guides
+</a></div><div class="nav-item"><a href="/js-uprtcl/modules/" class="nav-link">
+  Modules
+</a></div><div class="nav-item"><a href="/js-uprtcl/resources/" class="nav-link">
+  Resources
+</a></div><div class="nav-item"><a href="https://github.com/uprtcl/js-uprtcl" target="_blank" rel="noopener noreferrer" class="nav-link external">
+  Github
+  <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></div> <!----></nav></div></header> <div class="sidebar-mask"></div> <aside class="sidebar"><nav class="nav-links"><div class="nav-item"><a href="/js-uprtcl/" class="nav-link">
+  Home
+</a></div><div class="nav-item"><a href="/js-uprtcl/guides/" class="nav-link router-link-active">
+  Guides
+</a></div><div class="nav-item"><a href="/js-uprtcl/modules/" class="nav-link">
+  Modules
+</a></div><div class="nav-item"><a href="/js-uprtcl/resources/" class="nav-link">
+  Resources
+</a></div><div class="nav-item"><a href="https://github.com/uprtcl/js-uprtcl" target="_blank" rel="noopener noreferrer" class="nav-link external">
+  Github
+  <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></div> <!----></nav>  <ul class="sidebar-links"><li><a href="/js-uprtcl/guides/" class="sidebar-link">Introduction</a></li><li><section class="sidebar-group collapsable depth-0"><p class="sidebar-heading"><span>Using MicroModules</span> <span class="arrow right"></span></p> <!----></section></li><li><a href="/js-uprtcl/guides/using-the-evees-module.html" class="sidebar-link">Using the Evees module</a></li><li><a href="/js-uprtcl/guides/developing-micro-modules.html" class="sidebar-link">Developing MicroModules</a></li><li><section class="sidebar-group collapsable depth-0"><p class="sidebar-heading open"><span>Developing Cortex modules</span> <span class="arrow down"></span></p> <ul class="sidebar-links sidebar-group-items"><li><a href="/js-uprtcl/guides/cortex/what-is-cortex.html" class="sidebar-link">What is Cortex?</a></li><li><a href="/js-uprtcl/guides/cortex/loading-cortex.html" class="sidebar-link">Loading Cortex</a></li><li><section class="sidebar-group collapsable is-sub-group depth-1"><p class="sidebar-heading"><span>Building blocks</span> <span class="arrow right"></span></p> <!----></section></li><li><a href="/js-uprtcl/guides/cortex/loading-building-blocks.html" class="sidebar-link">Loading building blocks</a></li><li><a href="/js-uprtcl/guides/cortex/using-the-pattern-recognizer.html" class="active sidebar-link">Using the Pattern Recognizer</a><ul class="sidebar-sub-headers"><li class="sidebar-sub-header"><a href="/js-uprtcl/guides/cortex/using-the-pattern-recognizer.html#manual-usage" class="sidebar-link">Manual usage</a></li><li class="sidebar-sub-header"><a href="/js-uprtcl/guides/cortex/using-the-pattern-recognizer.html#recognizing-patterns-from-a-graphql-query" class="sidebar-link">Recognizing patterns from a GraphQl query</a></li></ul></li></ul></section></li></ul> </aside> <main class="page"> <div class="theme-default-content content__default"><h1 id="using-the-pattern-recognizer"><a href="#using-the-pattern-recognizer" class="header-anchor">#</a> Using the Pattern Recognizer</h1> <p>Until now, we have seen how to create patterns and integrate them inside the <code>ApolloClient</code> infrastructure to be able to resolve through entities. But, <strong>we can also use the pattern recognizing features of Cortex manually, through the <code>PatternRecognizer</code></strong>.</p> <h2 id="manual-usage"><a href="#manual-usage" class="header-anchor">#</a> Manual usage</h2> <p>The <code>PatternRecognizer</code> is a small class that contains all <code>Patterns</code> registered with all the <code>MicroModules</code> you have loaded in your app. It then <strong>exposes utility functions that return all the patterns and behaviours that recognize any given object</strong>. See the API for the <a href="https://github.com/uprtcl/js-uprtcl/blob/master/packages/cortex/src/recognizer/pattern.recognizer.ts" target="_blank" rel="noopener noreferrer"><code>PatternRecognizer</code><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a> class to see all available functions.</p> <p>You can request it from anywhere, and use it:</p> <div class="language-ts extra-class"><pre class="language-ts"><code><span class="token keyword">import</span> <span class="token punctuation">{</span> PatternRecognizer<span class="token punctuation">,</span> CortexModule<span class="token punctuation">,</span> Pattern <span class="token punctuation">}</span> <span class="token keyword">from</span> <span class="token string">'@uprtcl/cortex'</span><span class="token punctuation">;</span>
+
+@<span class="token function">injectable</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token keyword">export</span> <span class="token keyword">class</span> <span class="token class-name">TestService</span> <span class="token punctuation">{</span>
+  <span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="token parameter">@<span class="token function">inject</span><span class="token punctuation">(</span>CortexModule<span class="token punctuation">.</span>bindings<span class="token punctuation">.</span>Recognizer<span class="token punctuation">)</span> recognizer<span class="token operator">:</span> PatternRecognizer</span><span class="token punctuation">)</span> <span class="token punctuation">{</span><span class="token punctuation">}</span>
+
+  <span class="token keyword">async</span> <span class="token function">getAllLinksLinks</span><span class="token punctuation">(</span>object<span class="token operator">:</span> <span class="token builtin">any</span><span class="token punctuation">)</span><span class="token operator">:</span> <span class="token builtin">Promise</span><span class="token operator">&lt;</span><span class="token builtin">string</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token operator">&gt;</span> <span class="token punctuation">{</span>
+    <span class="token keyword">const</span> behaviours<span class="token operator">:</span> Behaviour<span class="token operator">&lt;</span><span class="token builtin">any</span><span class="token operator">&gt;</span><span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span>recognizer<span class="token punctuation">.</span><span class="token function">recognizeBehaviours</span><span class="token punctuation">(</span>object<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">const</span> linksBehaviours <span class="token operator">=</span> behaviours<span class="token punctuation">.</span><span class="token function">filter</span><span class="token punctuation">(</span><span class="token parameter">b</span> <span class="token operator">=&gt;</span> <span class="token punctuation">(</span>b <span class="token keyword">as</span> HasLinks<span class="token punctuation">)</span><span class="token punctuation">.</span>links<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">return</span> linksBehaviours<span class="token punctuation">.</span><span class="token function">map</span><span class="token punctuation">(</span><span class="token parameter">b</span> <span class="token operator">=&gt;</span> b<span class="token punctuation">.</span><span class="token function">links</span><span class="token punctuation">(</span>object<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre></div><p>Remember! <strong>Any function you execute when recognizing an object expects as its first parameter the recognized object</strong>.</p> <h2 id="recognizing-patterns-from-a-graphql-query"><a href="#recognizing-patterns-from-a-graphql-query" class="header-anchor">#</a> Recognizing patterns from a GraphQl query</h2> <p>Pattern recognizing is <strong>natively integrated</strong> with our GraphQl infrastructure.</p> <ul><li>You can add new properties to the <code>Patterns</code> type:</li></ul> <div class="language-ts extra-class"><pre class="language-ts"><code><span class="token keyword">import</span> gql <span class="token keyword">from</span> <span class="token string">'graphql-tag'</span><span class="token punctuation">;</span>
+
+<span class="token keyword">export</span> <span class="token keyword">const</span> typeDef <span class="token operator">=</span> gql<span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">
+  extend type Patterns {
+    text: String
+  }
+</span><span class="token template-punctuation string">`</span></span><span class="token punctuation">;</span>
+</code></pre></div><p>Make the <strong>fields return type optional</strong>, since you cannot force all entities present in your application to implement each pattern of behaviour.</p> <ul><li>You can request patterns of behaviour with a GraphQl query:</li></ul> <div class="language-ts extra-class"><pre class="language-ts"><code><span class="token keyword">import</span> <span class="token punctuation">{</span> LitElement<span class="token punctuation">,</span> html <span class="token punctuation">}</span> <span class="token keyword">from</span> <span class="token string">'lit-element'</span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> <span class="token punctuation">{</span> moduleConnect <span class="token punctuation">}</span> <span class="token keyword">from</span> <span class="token string">'@uprtcl/micro-orchestrator'</span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> <span class="token punctuation">{</span> ApolloClientModule <span class="token punctuation">}</span> <span class="token keyword">from</span> <span class="token string">'@uprtcl/graphql'</span><span class="token punctuation">;</span>
+
+<span class="token keyword">export</span> <span class="token keyword">class</span> <span class="token class-name">TextLens</span> <span class="token keyword">extends</span> <span class="token class-name">moduleConnect</span><span class="token punctuation">(</span>LitElement<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  apolloClient<span class="token operator">:</span> ApolloClient<span class="token punctuation">;</span>
+
+  @<span class="token function">property</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+  entityId<span class="token operator">:</span> <span class="token builtin">string</span><span class="token punctuation">;</span>
+
+  <span class="token function">firstUpdated</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">this</span><span class="token punctuation">.</span>apolloClient <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">request</span><span class="token punctuation">(</span>ApolloClientModule<span class="token punctuation">.</span>bindings<span class="token punctuation">.</span>Client<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">loadData</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+
+  <span class="token keyword">async</span> <span class="token function">loadData</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">const</span> result <span class="token operator">=</span> <span class="token keyword">await</span> <span class="token keyword">this</span><span class="token punctuation">.</span>apolloClient<span class="token punctuation">.</span><span class="token function">query</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+      query<span class="token operator">:</span> gql<span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">
+      {
+        entity(hash: </span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span><span class="token keyword">this</span><span class="token punctuation">.</span>entityId<span class="token interpolation-punctuation punctuation">}</span></span><span class="token string">) {
+          id
+
+          _context {
+            patterns {
+              text
+            }
+          }
+        }
+      }
+      </span><span class="token template-punctuation string">`</span></span>
+    <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">this</span><span class="token punctuation">.</span>text <span class="token operator">=</span> result<span class="token punctuation">.</span>data<span class="token punctuation">.</span>entity<span class="token punctuation">.</span>_context<span class="token punctuation">.</span>patterns<span class="token punctuation">.</span>text<span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+
+  <span class="token function">render</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token comment">// ... render the retrieved data</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre></div></div> <footer class="page-edit"><!----> <!----></footer> <div class="page-nav"><p class="inner"><span class="prev">
+      ←
+      <a href="/js-uprtcl/guides/cortex/loading-building-blocks.html" class="prev">
+        Loading building blocks
+      </a></span> <!----></p></div> </main></div><div class="global-ui"></div></div>
+    <script src="/js-uprtcl/assets/js/app.bc6e032e.js" defer></script><script src="/js-uprtcl/assets/js/2.9a3fecf1.js" defer></script><script src="/js-uprtcl/assets/js/14.91fad0c9.js" defer></script>
+  </body>
+</html>
