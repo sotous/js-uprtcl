@@ -79,7 +79,20 @@ export class EveesHelpers {
   }
   
   static async getCommitData(client: ApolloClient<any>, commitId: string): Promise<Entity<any>> {
-    const dataId = await this.getCommitDataId(client, commitId);
+    const result = await client.query({
+      query: gql`
+      {
+        entity(ref: "${commitId}") {
+          id 
+          ... on Commit {
+            data {
+              id
+            }
+          }
+        }
+      }`
+    });
+    const dataId = result.data.entity.data.id;
     const data = await loadEntity<any>(client, dataId);
     if (!data) throw new Error('data not found');
     return data;
