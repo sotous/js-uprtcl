@@ -4,22 +4,24 @@ import { Logger } from '@uprtcl/micro-orchestrator';
 
 import { EditorState, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
-import { toggleMark, splitBlock, joinBackward } from 'prosemirror-commands';
+import { toggleMark } from 'prosemirror-commands';
 import { DOMParser, DOMSerializer } from 'prosemirror-model';
 
 import { styles } from './prosemirror.css';
+import { styles as cmStyles } from './codemirror.css';
+
 import { titleSchema } from './schema-title';
 import { blockSchema } from './schema-block';
 
 import { iconsStyle } from './icons.css';
 import { icons } from './icons';
 import { TextType } from '../../types';
-import { runInThisContext } from 'vm';
+import { CodeBlockView } from './codeview';
 
 export const APPEND_ACTION = 'append';
 export const FOCUS_ACTION = 'focus';
 
-const LOGINFO = false;
+const LOGINFO = true;
 
 export class DocumentTextNodeEditor extends LitElement {
   logger = new Logger('DOCUMENT-TEXT-NODE-EDITOR');
@@ -150,25 +152,6 @@ export class DocumentTextNodeEditor extends LitElement {
       default:
         throw new Error(`unexpected action ${action.name}`);
     }
-  }
-
-  getValidInnerHTML(text: string) {
-    if (text.startsWith('<h1') || text.startsWith('<p')) {
-      const temp = document.createElement('template');
-      temp.innerHTML = text.trim();
-      if (temp.content.firstElementChild == null) {
-        return '';
-      }
-      return temp.content.firstElementChild.innerHTML;
-    } else {
-      return text;
-    }
-  }
-
-  getValidDocHtml(text: string) {
-    const innerHTML = this.getValidInnerHTML(text);
-    let tag = this.type === TextType.Title ? 'h1' : 'p';
-    return `<${tag}>${innerHTML}</${tag}>`;
   }
 
   getSlice(text: string) {
@@ -336,11 +319,46 @@ export class DocumentTextNodeEditor extends LitElement {
     return editable;
   }
 
+  /** removes the h1 external tag if present */
+  removeTag(text: string) {
+    const temp = document.createElement('template');
+    temp.innerHTML = text.trim();
+    if (temp.content.firstElementChild == null) {
+      return '';
+    }
+    return temp.content.firstElementChild.innerHTML;    
+  }
+
+  getValidDocHtml(text: string) {
+    text = text.trim();
+
+    /** nodes text is stored without the external tags, except for the
+     * code block, which uses the <pre> tag. */
+
+    /** <pre */
+    if(text.startsWith('<pre')) {
+      return text;
+    } 
+
+    /** protection against unexpected tags */
+    if(text.startsWith('<h1') || text.startsWith('<p')) {
+      text = this.removeTag(text);
+    }
+
+    /** tag is defined by the textNode type property */
+    const tag = this.type === TextType.Title ? 'h1' : 'p';
+    return `<${tag}>${text}</${tag}>`
+  }
+
   initEditor() {
+    if (LOGINFO) this.logger.log(`initEditor() - Initializing editor`, { init: this.init });
+
+    debugger
+
     if (this.editor && this.editor.view) {
       this.editor.view.destroy();
       this.editor = {};
-      if (LOGINFO) this.logger.log(`initEditor() - Initializing editor`, { init: this.init });
+      if (LOGINFO) this.logger.log(`initEditor() - re initializing editor`, { init: this.init });
     }
 
     const schema = this.type === TextType.Title ? titleSchema : blockSchema;
@@ -390,6 +408,9 @@ export class DocumentTextNodeEditor extends LitElement {
           this.keydown(view, event);
           return true;
         }
+      },
+      nodeViews: {
+        code_block: (node, view, getPos) => new CodeBlockView(node, view, getPos)
       }
     });
 
@@ -400,9 +421,17 @@ export class DocumentTextNodeEditor extends LitElement {
 
   state2Html(state) {
     const fragment = this.editor.serializer.serializeFragment(state.doc);
+    
+    const node = state.doc.content.content[0];
     const temp = document.createElement('div');
-    temp.appendChild(fragment);
-    return (temp.firstElementChild as HTMLElement).innerHTML;
+      temp.appendChild(fragment);
+
+    /** heading and paragraph content are stored without the exernal tag */
+    if (node.type.name === 'code_block') {
+      return (temp.firstElementChild as HTMLElement).outerHTML;
+    } else {
+      return (temp.firstElementChild as HTMLElement).innerHTML;
+    }
   }
 
   html2doc(text: string) {
@@ -473,6 +502,16 @@ export class DocumentTextNodeEditor extends LitElement {
       new CustomEvent('change-type', {
         detail: { type, lift }
       })
+    );
+  }
+
+  toggleCode() {
+    const node = this.editor.view.state.doc.content.content[0]; 
+    const end = node.nodeSize;
+    const newType = node.type.name !== 'code_block' ? blockSchema.nodes.code_block : blockSchema.nodes.paragraph;
+
+    this.editor.view.dispatch(
+      this.editor.view.state.tr.setBlockType(0, end, newType)
     );
   }
 
@@ -657,6 +696,13 @@ export class DocumentTextNodeEditor extends LitElement {
           ${icons.em}
         </button>
 
+        <button
+          class="btn btn-square btn-small"
+          @click=${() => this.toggleCode()}
+        >
+          ${icons.code}
+        </button>
+
         <button class="btn btn-square btn-small" @click=${this.linkClick}>
           ${icons.link}
         </button>
@@ -677,6 +723,7 @@ export class DocumentTextNodeEditor extends LitElement {
   static get styles() {
     return [
       styles,
+      cmStyles,
       iconsStyle,
       css`
         :host {
@@ -702,6 +749,7 @@ export class DocumentTextNodeEditor extends LitElement {
           border-radius: 10px;
           border: solid 1px #cfcfcf;
           background-color: #28282a;
+          padding: 4px;
         }
 
         .top-menu button {
@@ -721,7 +769,10 @@ export class DocumentTextNodeEditor extends LitElement {
           text-align: center;
           fill: white;
           color: white;
-        }
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+            }
 
         .btn:hover {
           background-color: #444444;
@@ -735,7 +786,6 @@ export class DocumentTextNodeEditor extends LitElement {
         }
 
         .btn-current {
-          text-decoration: underline;
           color: #9292a5;
           user-select: none;
         }
@@ -745,13 +795,11 @@ export class DocumentTextNodeEditor extends LitElement {
         }
 
         .btn-large svg {
-          margin-top: 6px;
-          width: 30px;
-          height: 30px;
+          width: 28px;
+          height: 28px;
         }
 
         .btn-small svg {
-          margin-top: 8px;
           width: 26px;
           height: 26px;
         }
