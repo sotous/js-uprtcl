@@ -9,7 +9,7 @@ export const styleMap = style => {
   }, '');
 };
 
-import { moduleConnect, Logger } from '@uprtcl/micro-orchestrator';
+import { moduleConnect, Logger, request } from '@uprtcl/micro-orchestrator';
 import { HasChildren, CortexModule, PatternRecognizer, Entity } from '@uprtcl/cortex';
 import {
   EveesRemote,
@@ -29,6 +29,7 @@ import { TextType, DocNode } from '../types';
 import { HasDocNodeLenses } from '../patterns/document-patterns';
 import { icons } from './prosemirror/icons';
 import { DocumentsBindings } from '../bindings';
+import { ApolloClientModule } from '@uprtcl/graphql';
 
 const LOGINFO = false;
 const SELECTED_BACKGROUND = 'rgb(200,200,200,0.2);';
@@ -43,7 +44,7 @@ export class DocumentEditor extends moduleConnect(LitElement) {
   @property({ type: String })
   editable: string = 'true';
 
-  @property({ attribute: false })
+  @request(ApolloClientModule.bindings.Client)
   client!: ApolloClient<any>;
 
   @property({ attribute: false })

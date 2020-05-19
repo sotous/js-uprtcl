@@ -93,7 +93,10 @@ export abstract class EveesHolochain extends HolochainProvider implements EveesR
   ): Promise<void> {
     await this.call('update_perspective_details', {
       perspective_address: perspectiveId,
-      details: details
+      details: {
+        ...details,
+        head: details.headId
+      }
     });
   }
 
@@ -101,14 +104,9 @@ export abstract class EveesHolochain extends HolochainProvider implements EveesR
    * @override
    */
   async getContextPerspectives(context: string): Promise<string[]> {
-    const perspectivesResponse = await this.call('get_context_perspectives', {
+    return this.call('get_context_perspectives', {
       context: context
     });
-
-    const perspectivesEntries: EntryResult<Signed<Perspective>>[] = parseEntriesResults(
-      perspectivesResponse
-    );
-    return perspectivesEntries.filter(p => !!p).map(p => p.entry.id);
   }
 
   /**
@@ -118,7 +116,8 @@ export abstract class EveesHolochain extends HolochainProvider implements EveesR
     const result = await this.call('get_perspective_details', {
       perspective_address: perspectiveId
     });
-    return parseResponse(result);
+    const details = parseResponse(result);
+    return { ...details, headId: details.head };
   }
 
   async cloneAndInitPerspective(perspectiveData: NewPerspectiveData): Promise<void> {
