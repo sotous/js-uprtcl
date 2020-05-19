@@ -37,7 +37,7 @@
     "@types/node": "^10.11.0",
     "graphql": "^14.6.0",
     "graphql-tag": "^2.10.3",
-    "graphql-tools": "^4.0.7",
+    "graphql-tools": "^5.0.0",
     "istanbul-instrumenter-loader": "^3.0.1",
     "karma": "^4.4.1",
     "karma-webpack": "^4.0.2",

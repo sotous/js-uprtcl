@@ -2,7 +2,7 @@ import { injectable } from 'inversify';
 
 import { EntryResult, HolochainProvider, parseEntriesResults } from '@uprtcl/holochain-provider';
 import { Signed, Entity } from '@uprtcl/cortex';
-import { KnownSourcesService, defaultCidConfig } from '@uprtcl/multiplatform';
+import { KnownSourcesService, defaultCidConfig, CASStore } from '@uprtcl/multiplatform';
 
 import { Perspective, Commit, PerspectiveDetails, NewPerspectiveData } from '../../../types';
 import { EveesRemote } from '../../evees.remote';
@@ -10,14 +10,16 @@ import { Secured } from '../../../utils/cid-hash';
 import { parseResponse } from '@uprtcl/holochain-provider';
 
 @injectable()
-export abstract class EveesHolochain extends HolochainProvider implements EveesRemote {
-      
+export abstract class EveesHolochain extends HolochainProvider implements EveesRemote, CASStore {
   knownSources?: KnownSourcesService | undefined;
   userId?: string | undefined;
-  zome: string = 'evees';
+  zome: string = 'uprtcl';
+  _casID!: string;
+
+  instance = 'test-instance';
 
   get authority() {
-    return '';
+    return this._casID;
   }
 
   get accessControl() {
@@ -29,12 +31,16 @@ export abstract class EveesHolochain extends HolochainProvider implements EveesR
   }
 
   get casID() {
-    // TODO RETURN SOURCE ID
-    return 'undefined';
+    return this._casID;
   }
 
   get cidConfig() {
-    return defaultCidConfig;
+    return {
+      version: 0 as 0,
+      type: 'sha2-256',
+      codec: 'dag-pb',
+      base: 'base58btc'
+    };
   }
 
   /**
@@ -42,6 +48,8 @@ export abstract class EveesHolochain extends HolochainProvider implements EveesR
    */
   public async ready() {
     await super.ready();
+
+    this._casID = await this.call('get_cas_id', {});
   }
 
   public async get(id: string): Promise<any | undefined> {
@@ -50,8 +58,10 @@ export abstract class EveesHolochain extends HolochainProvider implements EveesR
     });
   }
 
-  create(object: object, hash?: string | undefined): Promise<string> {
-    throw new Error("Method not implemented.");
+  async create(object: object, hash?: string | undefined): Promise<string> {
+    return this.call('create_data', {
+      data: JSON.stringify(object)
+    });
   }
 
   /**
@@ -118,12 +128,13 @@ export abstract class EveesHolochain extends HolochainProvider implements EveesR
   }
 
   async clonePerspectivesBatch(newPerspectivesData: NewPerspectiveData[]): Promise<void> {
-    const promises = newPerspectivesData.map(perspectiveData => this.cloneAndInitPerspective(perspectiveData));
+    const promises = newPerspectivesData.map(perspectiveData =>
+      this.cloneAndInitPerspective(perspectiveData)
+    );
     await Promise.all(promises);
   }
 
   deletePerspective(perspectiveId: string): Promise<void> {
-    throw new Error("Method not implemented.");
+    throw new Error('Method not implemented.');
   }
-
 }
