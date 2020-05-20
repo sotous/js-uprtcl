@@ -898,15 +898,11 @@ export class DocumentEditor extends moduleConnect(LitElement) {
       <div class="row">
         <div class="column">
           <div class="evee-info">
-            ${false
-              ? html`
-                  <evees-info-popper
-                    first-perspective-id=${node.ref}
-                    perspective-id=${node.ref}
-                    evee-color=${color}
-                  ></evees-info-popper>
-                `
-              : ''}
+            <evees-info-popper
+              first-perspective-id=${node.ref}
+              perspective-id=${node.ref}
+              evee-color=${color}
+            ></evees-info-popper>
           </div>
           <div class="node-content">
             ${nodeLense.render(node, {
@@ -999,10 +995,11 @@ export class DocumentEditor extends moduleConnect(LitElement) {
               </evees-options-menu> -->
               <evees-help>
                 <span>
-                  Your current changes are safely stored on this device and won't be lost.<br><br>
-                  "Push" them if<br><br>
-                    <li> You are about to propose a merge.</li><br>
-                    <li> This draft is public and you want them to be visible to others.</li>
+                  Your current changes are safely stored on this device and won't be lost.<br /><br />
+                  "Push" them if<br /><br />
+                  <li>You are about to propose a merge.</li>
+                  <br />
+                  <li>This draft is public and you want them to be visible to others.</li>
                 </span>
               </evees-help>
             `
