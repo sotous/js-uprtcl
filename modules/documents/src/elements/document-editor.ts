@@ -2,9 +2,12 @@ import { LitElement, property, html, css } from 'lit-element';
 import { ApolloClient, gql } from 'apollo-boost';
 import isEqual from 'lodash-es/isEqual';
 
-export const styleMap = style => {
+export const styleMap = (style) => {
   return Object.entries(style).reduce((styleString, [propName, propValue]) => {
-    propName = propName.replace(/([A-Z])/g, matches => `-${matches[0].toLowerCase()}`);
+    propName = propName.replace(
+      /([A-Z])/g,
+      (matches) => `-${matches[0].toLowerCase()}`
+    );
     return `${styleString}${propName}:${propValue};`;
   }, '');
 };
@@ -21,7 +24,7 @@ import {
   CREATE_ENTITY,
   EveesDraftsLocal,
   MenuConfig,
-  EveesHelpers
+  EveesHelpers,
 } from '@uprtcl/evees';
 import { loadEntity, CASStore } from '@uprtcl/multiplatform';
 
@@ -79,7 +82,8 @@ export class DocumentEditor extends moduleConnect(LitElement) {
   }
 
   updated(changedProperties) {
-    if (LOGINFO) this.logger.log('updated()', { ref: this.ref, changedProperties });
+    if (LOGINFO)
+      this.logger.log('updated()', { ref: this.ref, changedProperties });
 
     if (changedProperties.has('ref')) {
       this.loadDoc();
@@ -98,18 +102,24 @@ export class DocumentEditor extends moduleConnect(LitElement) {
     this.doc = await this.loadNodeRec(this.ref);
   }
 
-  async loadNodeRec(ref: string, ix?: number, parent?: DocNode): Promise<DocNode> {
+  async loadNodeRec(
+    ref: string,
+    ix?: number,
+    parent?: DocNode
+  ): Promise<DocNode> {
     if (LOGINFO) this.logger.log('loadNodeRec()', { ref, ix, parent });
 
     const node = await this.loadNode(ref, parent, ix);
 
-    const loadChildren = node.hasChildren.getChildrenLinks({ id: '', object: node.draft }).map(
-      async (child, ix): Promise<DocNode> => {
-        return child !== undefined && child !== ''
-          ? await this.loadNodeRec(child, ix, node)
-          : node.childrenNodes[ix];
-      }
-    );
+    const loadChildren = node.hasChildren
+      .getChildrenLinks({ id: '', object: node.draft })
+      .map(
+        async (child, ix): Promise<DocNode> => {
+          return child !== undefined && child !== ''
+            ? await this.loadNodeRec(child, ix, node)
+            : node.childrenNodes[ix];
+        }
+      );
 
     node.parent = parent;
     node.childrenNodes = await Promise.all(loadChildren);
@@ -135,17 +145,32 @@ export class DocumentEditor extends moduleConnect(LitElement) {
     let headId!: string;
 
     if (entityType === EveesModule.bindings.PerspectiveType) {
-      authority = await EveesHelpers.getPerspectiveAuthority(this.client, entity.id);
+      authority = await EveesHelpers.getPerspectiveAuthority(
+        this.client,
+        entity.id
+      );
 
       if (this.editable === 'true') {
-        const accessControl = await EveesHelpers.getAccessControl(this.client, entity.id);
+        const accessControl = await EveesHelpers.getAccessControl(
+          this.client,
+          entity.id
+        );
         editable = accessControl ? accessControl.canWrite : false;
-        context = await EveesHelpers.getPerspectiveContext(this.client, entity.id);
-        headId = await EveesHelpers.getPerspectiveHeadId(this.client, entity.id);
+        context = await EveesHelpers.getPerspectiveContext(
+          this.client,
+          entity.id
+        );
+        headId = await EveesHelpers.getPerspectiveHeadId(
+          this.client,
+          entity.id
+        );
         dataId = await EveesHelpers.getCommitDataId(this.client, headId);
       } else {
         editable = false;
-        dataId = await EveesHelpers.getPerspectiveDataId(this.client, entity.id);
+        dataId = await EveesHelpers.getPerspectiveDataId(
+          this.client,
+          entity.id
+        );
         context = '';
         headId = '';
       }
@@ -166,7 +191,8 @@ export class DocumentEditor extends moduleConnect(LitElement) {
       }
     }
 
-    if (!dataId || !entityType) throw Error(`data not loaded for ref ${this.ref}`);
+    if (!dataId || !entityType)
+      throw Error(`data not loaded for ref ${this.ref}`);
 
     // TODO get data and patterns hasChildren/hasDocNodeLenses from query
     const data: Entity<any> | undefined = await loadEntity(this.client, dataId);
@@ -174,10 +200,10 @@ export class DocumentEditor extends moduleConnect(LitElement) {
 
     const hasChildren: HasChildren = this.recognizer
       .recognizeBehaviours(data)
-      .find(b => (b as HasChildren).getChildrenLinks);
+      .find((b) => (b as HasChildren).getChildrenLinks);
     const hasDocNodeLenses: HasDocNodeLenses = this.recognizer
       .recognizeBehaviours(data)
-      .find(b => (b as HasDocNodeLenses).docNodeLenses);
+      .find((b) => (b as HasDocNodeLenses).docNodeLenses);
 
     if (!hasChildren) throw Error('hasChildren undefined');
     if (!hasDocNodeLenses) throw Error('hasDocNodeLenses undefined');
@@ -199,7 +225,7 @@ export class DocumentEditor extends moduleConnect(LitElement) {
       editable,
       authority,
       context,
-      focused: false
+      focused: false,
     };
 
     return node;
@@ -234,21 +260,26 @@ export class DocumentEditor extends moduleConnect(LitElement) {
   defaultEntity(text: string, type: TextType) {
     return {
       data: { text, type, links: [] },
-      entityType: DocumentsBindings.TextNodeType
+      entityType: DocumentsBindings.TextNodeType,
     };
   }
 
   getStore(eveesAuthority: string, type: string): CASStore {
     if (!this.remotesMap) throw new Error('remotes config undefined');
-    const remote = this.eveesRemotes.find(r => r.authority === eveesAuthority);
+    const remote = this.eveesRemotes.find(
+      (r) => r.authority === eveesAuthority
+    );
 
-    if (!remote) throw new Error(`Could not find evees remote with authority ID ${eveesAuthority}`);
+    if (!remote)
+      throw new Error(
+        `Could not find evees remote with authority ID ${eveesAuthority}`
+      );
 
     return this.remotesMap(remote, type);
   }
 
   hasChangesAll() {
-    if (!this.doc) return true;
+    if (!this.doc) return false;
     return this.hasChangesRec(this.doc);
   }
 
@@ -261,7 +292,7 @@ export class DocumentEditor extends moduleConnect(LitElement) {
 
   hasChangesRec(node: DocNode) {
     if (this.hasChanges(node)) return true;
-    const ix = node.childrenNodes.find(child => this.hasChangesRec(child));
+    const ix = node.childrenNodes.find((child) => this.hasChangesRec(child));
     if (ix !== undefined) return true;
     return false;
   }
@@ -271,8 +302,8 @@ export class DocumentEditor extends moduleConnect(LitElement) {
     // console.log({ hasChanges: this.docHasChanges });
     let event = new CustomEvent('doc-changed', {
       detail: {
-        docChanged: this.docHasChanges
-      }
+        docChanged: this.docHasChanges,
+      },
     });
     this.dispatchEvent(event);
     super.performUpdate();
@@ -281,7 +312,8 @@ export class DocumentEditor extends moduleConnect(LitElement) {
   async persistAll(message?: string) {
     if (!this.doc) return;
     this.persistingAll = true;
-    if (this.doc.authority === undefined) throw Error('top element must have an authority');
+    if (this.doc.authority === undefined)
+      throw Error('top element must have an authority');
     await this.persistNodeRec(this.doc, this.doc.authority, message);
     /** reload doc from backend */
     await this.loadDoc();
@@ -289,16 +321,21 @@ export class DocumentEditor extends moduleConnect(LitElement) {
     this.persistingAll = false;
   }
 
-  async persistNodeRec(node: DocNode, defaultAuthority: string, message?: string) {
-    const persistChildren = node.childrenNodes.map(child =>
+  async persistNodeRec(
+    node: DocNode,
+    defaultAuthority: string,
+    message?: string
+  ) {
+    const persistChildren = node.childrenNodes.map((child) =>
       this.persistNodeRec(child, defaultAuthority, message)
     );
     await Promise.all(persistChildren);
 
     /** set the children with the children refs (which were created above) */
-    const { object } = node.hasChildren.replaceChildrenLinks({ id: '', object: node.draft })(
-      node.childrenNodes.map(node => node.ref)
-    );
+    const { object } = node.hasChildren.replaceChildrenLinks({
+      id: '',
+      object: node.draft,
+    })(node.childrenNodes.map((node) => node.ref));
     this.setNodeDraft(node, object);
 
     await this.persistNode(node, defaultAuthority, message);
@@ -332,7 +369,11 @@ export class DocumentEditor extends moduleConnect(LitElement) {
         break;
 
       case EveesModule.bindings.CommitType:
-        const commitParents = this.isPlaceholder(node.ref) ? [] : node.headId ? [node.headId] : [];
+        const commitParents = this.isPlaceholder(node.ref)
+          ? []
+          : node.headId
+          ? [node.headId]
+          : [];
         const commitId = await this.createCommit(
           node.draft,
           node.authority !== undefined ? node.authority : defaultAuthority,
@@ -343,7 +384,8 @@ export class DocumentEditor extends moduleConnect(LitElement) {
         break;
 
       default:
-        if (node.authority === undefined) throw Error(`authority not defined for node ${node.ref}`);
+        if (node.authority === undefined)
+          throw Error(`authority not defined for node ${node.ref}`);
         const dataId = await this.createEntity(node.draft, node.authority);
         node.ref = dataId;
         break;
@@ -354,15 +396,18 @@ export class DocumentEditor extends moduleConnect(LitElement) {
   }
 
   async createEntity(content: any, authority: string): Promise<string> {
-    const entityType = this.recognizer.recognizeType({ id: '', object: content });
+    const entityType = this.recognizer.recognizeType({
+      id: '',
+      object: content,
+    });
     const store = this.getStore(authority, entityType);
 
     const createTextNode = await this.client.mutate({
       mutation: CREATE_ENTITY,
       variables: {
         object: content,
-        casID: store.casID
-      }
+        casID: store.casID,
+      },
     });
 
     return createTextNode.data.createEntity.id;
@@ -376,14 +421,18 @@ export class DocumentEditor extends moduleConnect(LitElement) {
   ): Promise<string> {
     const dataId = await this.createEntity(content, authority);
 
-    const remote = this.eveesRemotes.find(r => r.authority === authority);
+    const remote = this.eveesRemotes.find((r) => r.authority === authority);
     if (!remote) throw new Error(`Remote not found for authority ${authority}`);
 
-    return await EveesHelpers.createCommit(this.client, remote, { dataId, parentsIds });
+    return await EveesHelpers.createCommit(this.client, remote, {
+      dataId,
+      parentsIds,
+    });
   }
 
   async updateEvee(node: DocNode, message?: string): Promise<void> {
-    if (node.authority === undefined) throw Error(`authority not defined for node ${node.ref}`);
+    if (node.authority === undefined)
+      throw Error(`authority not defined for node ${node.ref}`);
 
     const commitId = await this.createCommit(
       node.draft,
@@ -397,8 +446,8 @@ export class DocumentEditor extends moduleConnect(LitElement) {
         perspectiveId: node.ref,
         context: node.context,
         headId: commitId,
-        message
-      }
+        message,
+      },
     });
 
     /** inform the external world if top element */
@@ -407,7 +456,7 @@ export class DocumentEditor extends moduleConnect(LitElement) {
         new ContentUpdatedEvent({
           bubbles: true,
           composed: true,
-          detail: { ref: this.ref as string }
+          detail: { ref: this.ref as string },
         })
       );
     }
@@ -424,7 +473,7 @@ export class DocumentEditor extends moduleConnect(LitElement) {
     const commitId = await this.createCommit(content, authority);
 
     if (!this.eveesRemotes) throw new Error('eveesRemotes undefined');
-    const remote = this.eveesRemotes.find(r => r.authority === authority);
+    const remote = this.eveesRemotes.find((r) => r.authority === authority);
     if (!remote) throw new Error(`Remote not found for authority ${authority}`);
 
     const createPerspective = await this.client.mutate({
@@ -433,8 +482,8 @@ export class DocumentEditor extends moduleConnect(LitElement) {
         headId: commitId,
         context,
         parentId: this.ref,
-        casID: remote.casID
-      }
+        casID: remote.casID,
+      },
     });
 
     return createPerspective.data.createPerspective.id;
@@ -444,18 +493,22 @@ export class DocumentEditor extends moduleConnect(LitElement) {
     const draftForReco = { id: '', object: draft };
     const hasChildren = this.recognizer
       .recognizeBehaviours(draftForReco)
-      .find(b => (b as HasChildren).getChildrenLinks);
+      .find((b) => (b as HasChildren).getChildrenLinks);
 
     const hasDocNodeLenses = this.recognizer
       .recognizeBehaviours(draftForReco)
-      .find(b => (b as HasDocNodeLenses).docNodeLenses);
+      .find((b) => (b as HasDocNodeLenses).docNodeLenses);
 
     const context = `${parent ? parent.context : 'ROOT'}-${ix}-${Date.now()}`;
 
     if (!hasChildren)
-      throw new Error(`hasChildren not found for object ${JSON.stringify(draftForReco)}`);
+      throw new Error(
+        `hasChildren not found for object ${JSON.stringify(draftForReco)}`
+      );
     if (!hasDocNodeLenses)
-      throw new Error(`hasDocNodeLenses not found for object ${JSON.stringify(draftForReco)}`);
+      throw new Error(
+        `hasDocNodeLenses not found for object ${JSON.stringify(draftForReco)}`
+      );
 
     const randint = 0 + Math.floor((10000 - 0) * Math.random());
     const ref = PLACEHOLDER_TOKEN + `-${ix !== undefined ? ix : 0}-${randint}`;
@@ -470,7 +523,7 @@ export class DocumentEditor extends moduleConnect(LitElement) {
       hasDocNodeLenses,
       context,
       editable: true,
-      focused: false
+      focused: false,
     };
   }
 
@@ -494,9 +547,13 @@ export class DocumentEditor extends moduleConnect(LitElement) {
     index?: number,
     count: number = 0
   ): Promise<DocNode[]> {
-    if (LOGINFO) this.logger.log('spliceChildren()', { node, elements, index, count });
+    if (LOGINFO)
+      this.logger.log('spliceChildren()', { node, elements, index, count });
 
-    const currentChildren = node.hasChildren.getChildrenLinks({ id: '', object: node.draft });
+    const currentChildren = node.hasChildren.getChildrenLinks({
+      id: '',
+      object: node.draft,
+    });
     index = index !== undefined ? index : currentChildren.length;
 
     /** create objects if elements is not an id */
@@ -520,7 +577,7 @@ export class DocumentEditor extends moduleConnect(LitElement) {
     const newNodes = await Promise.all(getNewNodes);
 
     let newChildren = [...currentChildren];
-    newChildren.splice(index, count, ...newNodes.map(node => node.ref));
+    newChildren.splice(index, count, ...newNodes.map((node) => node.ref));
     const removed = node.childrenNodes.splice(index, count, ...newNodes);
 
     /** update ix and parent of child nodes */
@@ -529,9 +586,10 @@ export class DocumentEditor extends moduleConnect(LitElement) {
       child.parent = node;
     });
 
-    const { object } = node.hasChildren.replaceChildrenLinks({ id: '', object: node.draft })(
-      newChildren
-    );
+    const { object } = node.hasChildren.replaceChildrenLinks({
+      id: '',
+      object: node.draft,
+    })(newChildren);
     this.setNodeDraft(node, object);
 
     return removed;
@@ -602,8 +660,14 @@ export class DocumentEditor extends moduleConnect(LitElement) {
     }
   }
 
-  async createChild(node: DocNode, newEntity: any, entityType: string, index?: number) {
-    if (LOGINFO) this.logger.log('createChild()', { node, newEntity, entityType, index });
+  async createChild(
+    node: DocNode,
+    newEntity: any,
+    entityType: string,
+    index?: number
+  ) {
+    if (LOGINFO)
+      this.logger.log('createChild()', { node, newEntity, entityType, index });
 
     await this.spliceChildren(node, [{ object: newEntity, entityType }], 0);
 
@@ -622,9 +686,14 @@ export class DocumentEditor extends moduleConnect(LitElement) {
     if (!node.parent) throw new Error('Node dont have a parent');
     if (node.ix === undefined) throw new Error('Node dont have an ix');
 
-    if (LOGINFO) this.logger.log('createSibling()', { node, newEntity, entityType });
+    if (LOGINFO)
+      this.logger.log('createSibling()', { node, newEntity, entityType });
 
-    await this.spliceChildren(node.parent, [{ object: newEntity, entityType }], node.ix + 1);
+    await this.spliceChildren(
+      node.parent,
+      [{ object: newEntity, entityType }],
+      node.ix + 1
+    );
 
     /** focus sibling */
     const sibling = node.parent.childrenNodes[node.ix + 1];
@@ -690,7 +759,12 @@ export class DocumentEditor extends moduleConnect(LitElement) {
     /** TITLE => PAR */
     if (oldType === TextType.Title && content.type === TextType.Paragraph) {
       /** remove this node children */
-      const children = await this.spliceChildren(node, [], 0, node.childrenNodes.length);
+      const children = await this.spliceChildren(
+        node,
+        [],
+        0,
+        node.childrenNodes.length
+      );
       /** append backwards this node with its children as siblings */
       await this.appendBackwards(node, '', [node].concat(children));
     }
@@ -707,14 +781,16 @@ export class DocumentEditor extends moduleConnect(LitElement) {
     const ixNext = ix + 1;
     const deltaWithChidren = node.parent.childrenNodes
       .slice(ixNext)
-      .findIndex(sibling => sibling.childrenNodes.length > 0);
+      .findIndex((sibling) => sibling.childrenNodes.length > 0);
 
     /** remove next siblings (until the first sibling with childs is found) from parent */
     const removed = await this.spliceChildren(
       node.parent,
       [],
       ixNext,
-      deltaWithChidren !== -1 ? deltaWithChidren : node.parent.childrenNodes.length - ixNext
+      deltaWithChidren !== -1
+        ? deltaWithChidren
+        : node.parent.childrenNodes.length - ixNext
     );
 
     /** add them as child of this node */
@@ -751,9 +827,14 @@ export class DocumentEditor extends moduleConnect(LitElement) {
 
     if (elements.length > 0) {
       if (backwardNode.parent !== undefined) {
-        if (backwardNode.ix === undefined) throw new Error('cant append elements');
+        if (backwardNode.ix === undefined)
+          throw new Error('cant append elements');
         /** add elements as siblings of backward node */
-        await this.spliceChildren(backwardNode.parent, elements, backwardNode.ix + 1);
+        await this.spliceChildren(
+          backwardNode.parent,
+          elements,
+          backwardNode.ix + 1
+        );
       } else {
         /** add elements as children of backward node */
         await this.spliceChildren(backwardNode, elements, 0);
@@ -773,7 +854,12 @@ export class DocumentEditor extends moduleConnect(LitElement) {
     if (LOGINFO) this.logger.log('joinBackward()', { node, tail });
 
     /** remove this node children */
-    const removed = await this.spliceChildren(node, [], 0, node.childrenNodes.length);
+    const removed = await this.spliceChildren(
+      node,
+      [],
+      0,
+      node.childrenNodes.length
+    );
     await this.appendBackwards(node, tail, removed);
 
     this.requestUpdate();
@@ -837,7 +923,9 @@ export class DocumentEditor extends moduleConnect(LitElement) {
     if (node.childrenNodes.length === 0) {
       return node;
     } else {
-      return this.getLastNodeRec(node.childrenNodes[node.childrenNodes.length - 1]);
+      return this.getLastNodeRec(
+        node.childrenNodes[node.childrenNodes.length - 1]
+      );
     }
   }
 
@@ -881,9 +969,7 @@ export class DocumentEditor extends moduleConnect(LitElement) {
   }
 
   renderWithCortex(node: DocNode) {
-    return html`
-      <cortex-entity hash=${node.ref}></cortex-entity>
-    `;
+    return html` <cortex-entity hash=${node.ref}></cortex-entity> `;
   }
 
   renderTopRow(node: DocNode) {
@@ -915,14 +1001,11 @@ export class DocumentEditor extends moduleConnect(LitElement) {
               joinBackward: (tail: string) => this.joinBackward(node, tail),
               pullDownward: () => this.pullDownward(node),
               lift: () => this.lift(node),
-              split: (tail: string, asChild: boolean) => this.split(node, tail, asChild),
-              appended: () => this.appended(node)
+              split: (tail: string, asChild: boolean) =>
+                this.split(node, tail, asChild),
+              appended: () => this.appended(node),
             })}
-            ${hasIcon
-              ? html`
-                  <div class="node-mark">${icon}</div>
-                `
-              : ''}
+            ${hasIcon ? html` <div class="node-mark">${icon}</div> ` : ''}
           </div>
         </div>
       </div>
@@ -933,7 +1016,7 @@ export class DocumentEditor extends moduleConnect(LitElement) {
     return html`
       ${this.renderTopRow(node)}
       ${node.childrenNodes
-        ? node.childrenNodes.map(child => {
+        ? node.childrenNodes.map((child) => {
             return this.renderDocNode(child);
           })
         : ''}
@@ -943,7 +1026,9 @@ export class DocumentEditor extends moduleConnect(LitElement) {
   renderDocNode(node: DocNode) {
     return html`
       <div
-        style=${styleMap({ backgroundColor: node.focused ? SELECTED_BACKGROUND : 'transparent' })}
+        style=${styleMap({
+          backgroundColor: node.focused ? SELECTED_BACKGROUND : 'transparent',
+        })}
       >
         ${node.hasDocNodeLenses.docNodeLenses().length > 0
           ? this.renderHere(node)
@@ -972,8 +1057,8 @@ export class DocumentEditor extends moduleConnect(LitElement) {
       // },
       'push-with-message': {
         graphic: 'notes',
-        text: 'push with message'
-      }
+        text: 'push with message',
+      },
     };
     return html`
       <div class="doc-topbar">
@@ -995,20 +1080,27 @@ export class DocumentEditor extends moduleConnect(LitElement) {
               </evees-options-menu> -->
               <evees-help>
                 <span>
-                  Your current changes are safely stored on this device and won't be lost.<br /><br />
+                  Your current changes are safely stored on this device and
+                  won't be lost.<br /><br />
                   "Push" them if<br /><br />
                   <li>You are about to propose a merge.</li>
                   <br />
-                  <li>This draft is public and you want them to be visible to others.</li>
+                  <li>
+                    This draft is public and you want them to be visible to
+                    others.
+                  </li>
                 </span>
               </evees-help>
             `
           : ''}
         ${this.showCommitMessage
           ? html`
-              <mwc-textfield outlined id="COMMIT_MESSAGE" label="Message"> </mwc-textfield>
-              <mwc-icon-button icon="clear" @click=${this.cancelCommitClicked}> </mwc-icon-button>
-              <mwc-icon-button icon="done" @click=${this.acceptCommitClicked}> </mwc-icon-button>
+              <mwc-textfield outlined id="COMMIT_MESSAGE" label="Message">
+              </mwc-textfield>
+              <mwc-icon-button icon="clear" @click=${this.cancelCommitClicked}>
+              </mwc-icon-button>
+              <mwc-icon-button icon="done" @click=${this.acceptCommitClicked}>
+              </mwc-icon-button>
             `
           : ''}
       </div>
@@ -1019,9 +1111,7 @@ export class DocumentEditor extends moduleConnect(LitElement) {
     if (LOGINFO) this.logger.log('render()', { doc: this.doc });
 
     if (!this.doc) {
-      return html`
-        <cortex-loading-placeholder></cortex-loading-placeholder>
-      `;
+      return html` <cortex-loading-placeholder></cortex-loading-placeholder> `;
     }
 
     return html`

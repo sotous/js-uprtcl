@@ -6,7 +6,7 @@ import {
   ConnectedElement,
   CustomElement,
   i18nextBaseModule,
-  RequestDependencyEvent
+  RequestDependencyEvent,
 } from '@uprtcl/micro-orchestrator';
 
 import { ReduxStoreModule } from './redux-store.module';
@@ -25,21 +25,24 @@ export const reduxConnect = <T extends Constructor<CustomElement>>(
 } & T =>
   class extends baseElement implements ReduxConnectedElement {
     store!: Store;
-    t: (key: string) => string = key => key;
+    t: (key: string) => string = (key) => key;
 
     private requestGeneric<T>(
       dependency: interfaces.ServiceIdentifier<T>,
-      multiple: boolean = false
-    ): T[][] {
-      if (!this.isConnected)
+      options: { multiple: boolean; optional: boolean }
+    ): T[] {
+      if (!this.isConnected) {
         throw new Error(
-          'Element is not connected yet: you can only use request() and requestAll() after the element has been initialized and connected to the DOM (e.g. firstUpdated() in LitElement)'
+          `Element ${
+            (this as any).tagName
+          } is requesting dependency "${dependency.toString()}", but is not connected yet: you can only use request() and requestAll() after the element has been initialized and connected to the DOM (e.g. firstUpdated() in LitElement)`
         );
+      }
 
       const event = new RequestDependencyEvent({
-        detail: { request: [dependency], multiple: multiple },
+        detail: { request: dependency, options },
         composed: true,
-        bubbles: true
+        bubbles: true,
       });
 
       const resolved = this.dispatchEvent(event);
@@ -48,26 +51,31 @@ export const reduxConnect = <T extends Constructor<CustomElement>>(
         resolved &&
         event.dependencies &&
         event.dependencies.length > 0 &&
-        event.dependencies[0] &&
-        event.dependencies[0][0]
+        event.dependencies[0] !== undefined
       ) {
         return event.dependencies;
       } else {
         throw new Error(
           `Dependency ${String(dependency)} could not be loaded:
-          make sure that this element is included inside a <module-container> super element`
+          make sure that this element is included inside a <module-container> super element and the dependency exists`
         );
       }
     }
 
-    request<T>(dependency: interfaces.ServiceIdentifier<T>): T {
-      const deps = this.requestGeneric(dependency, false);
-      return deps[0][0];
+    request<T>(
+      dependency: interfaces.ServiceIdentifier<T>,
+      options: { optional: boolean } = { optional: false }
+    ): T {
+      const deps = this.requestGeneric(dependency, { optional: options.optional, multiple: false });
+      return deps[0];
     }
 
-    requestAll<T>(dependency: interfaces.ServiceIdentifier<T>): T[] {
-      const deps = this.requestGeneric(dependency, true);
-      return deps[0];
+    requestAll<T>(
+      dependency: interfaces.ServiceIdentifier<T>,
+      options: { optional: boolean } = { optional: false }
+    ): T[] {
+      const deps = this.requestGeneric(dependency, { optional: options.optional, multiple: true });
+      return deps;
     }
 
     connectedCallback() {

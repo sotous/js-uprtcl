@@ -25,6 +25,5 @@ export default {
       cacheRoot: `${require('temp-dir')}/.rpt2_cache`
     }),
     sourceMaps()
-  ],
-  preserveSymlinks: true
+  ]
 };

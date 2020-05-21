@@ -2,9 +2,9 @@ import { LitElement, property, html, css } from 'lit-element';
 import { ApolloClient, gql } from 'apollo-boost';
 // import { styleMap } from 'lit-html/directives/style-map';
 // https://github.com/Polymer/lit-html/issues/729
-export const styleMap = style => {
+export const styleMap = (style) => {
   return Object.entries(style).reduce((styleString, [propName, propValue]) => {
-    propName = propName.replace(/([A-Z])/g, matches => `-${matches[0].toLowerCase()}`);
+    propName = propName.replace(/([A-Z])/g, (matches) => `-${matches[0].toLowerCase()}`);
     return `${styleString}${propName}:${propValue};`;
   }, '');
 };
@@ -71,26 +71,16 @@ export class WikiPage extends moduleConnect(LitElement) {
           }
 
         }
-      }`
+      }`,
     });
 
     this.textNode = result.data.entity.head.data;
   }
 
   render() {
-    if (!this.textNode)
-      return html`
-        <cortex-loading-placeholder></cortex-loading-placeholder>
-      `;
+    if (!this.textNode) return html` <cortex-loading-placeholder></cortex-loading-placeholder> `;
 
     return html`
-      <div
-        class="color-bar"
-        style=${styleMap({
-          backgroundColor: this.color
-        })}
-      ></div>
-
       <div class="top-row">
         <mwc-icon-button icon="arrow_back_ios" @click=${this.back}></mwc-icon-button>
       </div>
@@ -98,7 +88,7 @@ export class WikiPage extends moduleConnect(LitElement) {
       <div class="page-content">
         <documents-editor
           id="doc-editor"
-          @doc-changed=${e => this.onDocChanged(e)}
+          @doc-changed=${(e) => this.onDocChanged(e)}
           .client=${this.client}
           ref=${this.pageHash}
           color=${this.color}
@@ -112,8 +102,8 @@ export class WikiPage extends moduleConnect(LitElement) {
   private onDocChanged(e: CustomEvent) {
     let event = new CustomEvent('doc-changed', {
       detail: {
-        docChanged: e.detail.docChanged
-      }
+        docChanged: e.detail.docChanged,
+      },
     });
     this.dispatchEvent(event);
   }
@@ -137,12 +127,6 @@ export class WikiPage extends moduleConnect(LitElement) {
           display: flex;
           flex-direction: column;
         }
-        .color-bar {
-          height: 1vw;
-          max-height: 5px;
-          width: 100%;
-          margin-bottom: 1vw;
-        }
         .page-content {
           margin: 0 auto;
           max-width: 900px;
@@ -162,7 +146,7 @@ export class WikiPage extends moduleConnect(LitElement) {
             display: none;
           }
         }
-      `
+      `,
     ];
   }
 }

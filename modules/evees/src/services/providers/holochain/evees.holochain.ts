@@ -54,7 +54,7 @@ export abstract class EveesHolochain extends HolochainProvider implements EveesR
 
   public async get(id: string): Promise<any | undefined> {
     return this.call('get_entry', {
-      address: id
+      address: id,
     });
   }
 
@@ -70,7 +70,7 @@ export abstract class EveesHolochain extends HolochainProvider implements EveesR
   async clonePerspective(perspective: Secured<Perspective>): Promise<void> {
     await this.call('clone_perspective', {
       previous_address: perspective.id,
-      perspective: perspective.object
+      perspective: perspective.object,
     });
   }
 
@@ -80,7 +80,7 @@ export abstract class EveesHolochain extends HolochainProvider implements EveesR
   async cloneCommit(commit: Secured<Commit>): Promise<void> {
     await this.call('clone_commit', {
       perspective_address: commit.id,
-      commit: commit.object
+      commit: commit.object,
     });
   }
 
@@ -114,7 +114,7 @@ export abstract class EveesHolochain extends HolochainProvider implements EveesR
    */
   async getPerspectiveDetails(perspectiveId: string): Promise<PerspectiveDetails> {
     const result = await this.call('get_perspective_details', {
-      perspective_address: perspectiveId
+      perspective_address: perspectiveId,
     });
     const details = parseResponse(result);
     return { ...details, headId: details.head };
