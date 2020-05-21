@@ -8,11 +8,11 @@ import { Perspective, Commit, PerspectiveDetails, NewPerspectiveData } from '../
 import { EveesRemote } from '../../evees.remote';
 import { Secured } from '../../../utils/cid-hash';
 import { parseResponse } from '@uprtcl/holochain-provider';
+import { EveesAccessControlHolochain } from './evees-access-control.holochain';
 
 @injectable()
 export abstract class EveesHolochain extends HolochainProvider implements EveesRemote, CASStore {
   knownSources?: KnownSourcesService | undefined;
-  userId?: string | undefined;
   zome: string = 'uprtcl';
   _casID!: string;
 
@@ -23,7 +23,7 @@ export abstract class EveesHolochain extends HolochainProvider implements EveesR
   }
 
   get accessControl() {
-    return undefined;
+    return new EveesAccessControlHolochain(this);
   }
 
   get proposals() {
@@ -50,12 +50,17 @@ export abstract class EveesHolochain extends HolochainProvider implements EveesR
     await super.ready();
 
     this._casID = await this.call('get_cas_id', {});
+    this.userId = await this.call('get_my_address', {});
   }
 
   public async get(id: string): Promise<any | undefined> {
-    return this.call('get_entry', {
-      address: id,
+    const response = await this.call('get_entry', {
+      entry_address: id
     });
+
+    if (response === undefined) return undefined;
+
+    return JSON.parse(response.App[1]);
   }
 
   async create(object: object, hash?: string | undefined): Promise<string> {
@@ -70,7 +75,7 @@ export abstract class EveesHolochain extends HolochainProvider implements EveesR
   async clonePerspective(perspective: Secured<Perspective>): Promise<void> {
     await this.call('clone_perspective', {
       previous_address: perspective.id,
-      perspective: perspective.object,
+      perspective: perspective.object
     });
   }
 
@@ -80,7 +85,7 @@ export abstract class EveesHolochain extends HolochainProvider implements EveesR
   async cloneCommit(commit: Secured<Commit>): Promise<void> {
     await this.call('clone_commit', {
       perspective_address: commit.id,
-      commit: commit.object,
+      commit: commit.object
     });
   }
 
@@ -114,7 +119,7 @@ export abstract class EveesHolochain extends HolochainProvider implements EveesR
    */
   async getPerspectiveDetails(perspectiveId: string): Promise<PerspectiveDetails> {
     const result = await this.call('get_perspective_details', {
-      perspective_address: perspectiveId,
+      perspective_address: perspectiveId
     });
     const details = parseResponse(result);
     return { ...details, headId: details.head };

@@ -12,6 +12,7 @@ import { BasicAdminPattern, AdminBehaviour } from './patterns/basic-admin-contro
 import en from './i18n/en.json';
 import { PermissionsAdmin } from './elements/permissions-admin';
 import { RemoteLoginWidget } from './elements/remote-login-widget';
+import { CollaboratorPattern, CollaboratorBehaviour } from './patterns/collaborators.pattern';
 
 export class AccessControlModule extends MicroModule {
   static id = 'access-control-module';
@@ -30,6 +31,7 @@ export class AccessControlModule extends MicroModule {
       new PatternsModule([
         new OwnerPattern([OwnerBehaviour]),
         new BasicAdminPattern([AdminBehaviour]),
+        new CollaboratorPattern([CollaboratorBehaviour]),
       ]),
     ];
   }
