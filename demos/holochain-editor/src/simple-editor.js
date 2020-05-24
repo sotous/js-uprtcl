@@ -38,7 +38,7 @@ export class SimpleEditor extends moduleConnect(LitElement) {
       const client = this.request(ApolloClientModule.bindings.Client);
       const node = {
         text: 'New Document',
-        type: TextType.Paragraph,
+        type: TextType.Title,
         links: []
       };
       const eveesProvider = this.requestAll(EveesModule.bindings.EveesRemote).find(provider =>
@@ -58,11 +58,18 @@ export class SimpleEditor extends moduleConnect(LitElement) {
     }
   }
 
+  persist() {
+    this.shadowRoot.getElementById('editor').persistAll();
+  }
+
   render() {
     return html`
       ${this.rootHash
         ? html`
-            <documents-editor .ref=${this.rootHash} lens-type="content"></documents-editor>
+            <div style="display: flex; flex-direction: column">
+              <mwc-button label="PERSIST" @click=${() => this.persist()}></mwc-button>
+              <documents-editor .ref=${this.rootHash} id="editor"></documents-editor>
+            </div>
           `
         : html`
             Loading...

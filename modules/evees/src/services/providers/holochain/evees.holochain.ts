@@ -9,6 +9,7 @@ import { EveesRemote } from '../../evees.remote';
 import { Secured } from '../../../utils/cid-hash';
 import { parseResponse } from '@uprtcl/holochain-provider';
 import { EveesAccessControlHolochain } from './evees-access-control.holochain';
+import { sortObject } from '@uprtcl/ipfs-provider';
 
 @injectable()
 export abstract class EveesHolochain extends HolochainProvider implements EveesRemote, CASStore {
@@ -36,9 +37,9 @@ export abstract class EveesHolochain extends HolochainProvider implements EveesR
 
   get cidConfig() {
     return {
-      version: 0 as 0,
+      version: 1 as 1,
       type: 'sha2-256',
-      codec: 'dag-pb',
+      codec: 'dag-cbor',
       base: 'base58btc'
     };
   }
@@ -65,7 +66,8 @@ export abstract class EveesHolochain extends HolochainProvider implements EveesR
 
   async create(object: object, hash?: string | undefined): Promise<string> {
     return this.call('create_data', {
-      data: JSON.stringify(object)
+      data: JSON.stringify(sortObject(object)),
+      proxy_address: hash
     });
   }
 
