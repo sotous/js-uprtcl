@@ -2,7 +2,7 @@ import { LitElement, property, html, css } from 'lit-element';
 import { ApolloClient, gql } from 'apollo-boost';
 import isEqual from 'lodash-es/isEqual';
 
-export const styleMap = (style) => {
+const styleMap = (style) => {
   return Object.entries(style).reduce((styleString, [propName, propValue]) => {
     propName = propName.replace(
       /([A-Z])/g,
@@ -1095,7 +1095,7 @@ export class DocumentEditor extends moduleConnect(LitElement) {
           : ''}
         ${this.showCommitMessage
           ? html`
-              <mwc-textfield outlined id="COMMIT_MESSAGE" label="Message">
+              <mwc-textfield id="COMMIT_MESSAGE" label="Message">
               </mwc-textfield>
               <mwc-icon-button icon="clear" @click=${this.cancelCommitClicked}>
               </mwc-icon-button>

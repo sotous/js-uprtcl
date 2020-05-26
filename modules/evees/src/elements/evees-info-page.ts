@@ -1,13 +1,15 @@
 import { html, css, property, query } from 'lit-element';
-export const styleMap = (style) => {
+const styleMap = (style) => {
   return Object.entries(style).reduce((styleString, [propName, propValue]) => {
-    propName = propName.replace(/([A-Z])/g, (matches) => `-${matches[0].toLowerCase()}`);
+    propName = propName.replace(
+      /([A-Z])/g,
+      (matches) => `-${matches[0].toLowerCase()}`
+    );
     return `${styleString}${propName}:${propValue};`;
   }, '');
 };
 
 import { EveesInfoBase } from './evee-info-base';
-import { prettyAddress } from './support';
 import { UPDATE_HEAD } from '../graphql/queries';
 import { ApolloClient } from 'apollo-boost';
 import { MenuConfig } from './common-ui/evees-options-menu';
@@ -46,17 +48,15 @@ export class EveesInfoPage extends EveesInfoBase {
 
   perspectiveTitle() {
     if (!this.perspectiveData) return this.perspectiveId;
-    console.log('here');
+
     if (this.perspectiveId === this.firstPerspectiveId) {
-      return html` <span>Official</span> `;
+      return html`<span>Official</span>`;
     }
 
-    const hasName =
-      this.perspectiveData.details.name !== undefined && this.perspectiveData.details.name !== '';
-    const name = html` ${this.perspectiveData.details.name} `;
-    const defaultName = html` ${prettyAddress(this.perspectiveData.perspective.creatorId)} `;
-
-    return html` Draft ${hasName ? name : defaultName} `;
+    return html` <evees-author
+      color=${this.eveeColor}
+      user-id=${this.perspectiveData.perspective.creatorId}
+    ></evees-author>`;
   }
 
   async editNameClicked() {
@@ -93,6 +93,12 @@ export class EveesInfoPage extends EveesInfoBase {
         this.login();
         break;
 
+      case 'edit-profile':
+        if (this.defaultRemote) {
+          window.open(`https://3box.io/${this.defaultRemote.userId}`);
+        }
+        break;
+
       case 'edit':
         this.editNameClicked();
         break;
@@ -100,7 +106,11 @@ export class EveesInfoPage extends EveesInfoBase {
   }
 
   async showPullChanges() {
-    const confirm = await this.updatesDialog(this.pullWorkspace, 'apply', 'close');
+    const confirm = await this.updatesDialog(
+      this.pullWorkspace,
+      'apply',
+      'close'
+    );
 
     if (!confirm) {
       return;
@@ -111,52 +121,11 @@ export class EveesInfoPage extends EveesInfoBase {
     this.checkoutPerspective(this.perspectiveId);
   }
 
-  renderOtherPerspectives() {
-    return html`
-      <evees-perspectives-list
-        force-update=${this.forceUpdate}
-        perspective-id=${this.perspectiveId}
-        first-perspective-id=${this.firstPerspectiveId}
-        @perspective-selected=${(e) => this.checkoutPerspective(e.detail.id)}
-        @merge-perspective=${(e) =>
-          this.otherPerspectiveMerge(e.detail.perspectiveId, this.perspectiveId, false)}
-        @create-proposal=${(e) =>
-          this.otherPerspectiveMerge(e.detail.perspectiveId, this.perspectiveId, true)}
-        @authorize-proposal=${this.authorizeProposal}
-        @execute-proposal=${this.executeProposal}
-      ></evees-perspectives-list>
-    `;
-  }
-
   renderPermissions() {
     return html`
       <div class="perspectives-permissions">
-        <permissions-for-entity ref=${this.perspectiveId}> </permissions-for-entity>
-      </div>
-    `;
-  }
-
-  renderEditNameForm() {
-    return html`
-      <div>
-        <div class="row draft-name">
-          <mwc-textfield
-            outlined
-            id="draft-textfield"
-            value=${this.perspectiveData.details.name as string}
-            label="Draft Name"
-          >
-          </mwc-textfield>
-        </div>
-        <div class="row draft-mod-action">
-          <mwc-button
-            outlined
-            icon="clear"
-            @click=${() => (this.showEditName = false)}
-            label="Cancel"
-          ></mwc-button>
-          <mwc-button outlined icon="done" @click=${this.saveName} label="Save"></mwc-button>
-        </div>
+        <permissions-for-entity ref=${this.perspectiveId}>
+        </permissions-for-entity>
       </div>
     `;
   }
@@ -167,7 +136,7 @@ export class EveesInfoPage extends EveesInfoBase {
         icon="call_split"
         @click=${this.newPerspectiveClicked}
         loading=${this.creatingNewPerspective ? 'true' : 'false'}
-        label="new draft"
+        label="new perspective"
       >
       </evees-loading-button>
     `;
@@ -225,19 +194,16 @@ export class EveesInfoPage extends EveesInfoBase {
 
     const contextConfig: MenuConfig = {};
 
-    if (this.perspectiveData.canWrite) {
-      contextConfig['edit'] = {
-        disabled: false,
-        graphic: 'edit',
-        text: 'edit',
-      };
-    }
-
     if (this.isLogged) {
       contextConfig['logout'] = {
         disabled: false,
         graphic: 'exit_to_app',
         text: 'logout',
+      };
+      contextConfig['edit-profile'] = {
+        disabled: false,
+        graphic: 'account_box',
+        text: 'edit profile',
       };
     } else {
       contextConfig['login'] = {
@@ -251,19 +217,32 @@ export class EveesInfoPage extends EveesInfoBase {
       <div class="context-menu">
         <evees-help>
           <span>
-            To update the "Official Version" of this Wiki you need to create a new "Draft"<br /><br />
-            Once changes have been made to the draft, you can "Propose an Update" to the "Official
-            Version".
+            To update the "Official Version" of this Wiki you need to create a
+            new "Perspective"<br /><br />
+            Once changes have been made to that perspectective, click "Propose
+            Update" to update the "Official" perspective.
           </span>
         </evees-help>
-        <evees-options-menu .config=${contextConfig} @option-click=${this.optionClicked}>
+        <evees-options-menu
+          .config=${contextConfig}
+          @option-click=${this.optionClicked}
+        >
+          ${this.defaultRemote && this.defaultRemote.userId !== undefined
+            ? html` <div slot="icon" class="user-icon">
+                <evees-author
+                  user-id=${this.defaultRemote.userId}
+                  show-name="false"
+                ></evees-author>
+              </div>`
+            : ''}
         </evees-options-menu>
       </div>
     `;
 
     const pullButton = html`
       <div class="pull-menu">
-        <mwc-icon-button @click=${this.showPullChanges} icon="play_for_work"> </mwc-icon-button>
+        <mwc-icon-button @click=${this.showPullChanges} icon="play_for_work">
+        </mwc-icon-button>
       </div>
     `;
 
@@ -279,52 +258,85 @@ export class EveesInfoPage extends EveesInfoBase {
       <div class="container">
         <div class="column">
           <div class="section">
-            <div class="section-header">
+            <div class="section-header perspective-title">
               ${this.perspectiveTitle()}
             </div>
 
             <div class="section-content">
-              ${this.showEditName ? this.renderEditNameForm() : ''}
               ${this.renderPerspectiveActions()}
-              <div class="other-perspectives">
-                ${this.renderOtherPerspectives()}
+              <div class="list-container">
+                <strong>Perspectives:</strong>
+                <evees-perspectives-list
+                  force-update=${this.forceUpdate}
+                  perspective-id=${this.perspectiveId}
+                  first-perspective-id=${this.firstPerspectiveId}
+                  @perspective-selected=${(e) =>
+                    this.checkoutPerspective(e.detail.id)}
+                  @merge-perspective=${(e) =>
+                    this.otherPerspectiveMerge(
+                      e.detail.perspectiveId,
+                      this.perspectiveId,
+                      false
+                    )}
+                  @create-proposal=${(e) =>
+                    this.otherPerspectiveMerge(
+                      e.detail.perspectiveId,
+                      this.perspectiveId,
+                      true
+                    )}
+                ></evees-perspectives-list>
               </div>
             </div>
           </div>
 
-          <div class="section">
-            <div class="section-header">
-              Access Control
-            </div>
-            <div class="section-content">
-              ${this.renderPermissions()}
-            </div>
-            <div class="context-menu">
-              <evees-help>
-                <span>
-                  Drafts can be made public to let others read them.<br /><br />
-                  They can only be edited by their creator.
-                </span>
-              </evees-help>
-            </div>
-          </div>
+          ${this.perspectiveId === this.firstPerspectiveId
+            ? html`<div class="section">
+                <div class="section-header">
+                  Proposals
+                </div>
 
-          ${this.perspectiveData.canWrite
+                <div class="section-content list-container">
+                  <evees-proposals-list
+                    force-update=${this.forceUpdate}
+                    perspective-id=${this.perspectiveId}
+                    @authorize-proposal=${this.authorizeProposal}
+                    @execute-proposal=${this.executeProposal}
+                  ></evees-proposals-list>
+                </div>
+              </div>`
+            : ''}
+          ${this.firstPerspectiveId === this.perspectiveId
             ? html`
                 <div class="section">
+                  <div class="section-header">
+                    Access Control
+                  </div>
+                  <div class="section-content">
+                    ${this.renderPermissions()}
+                  </div>
+                  <div class="context-menu">
+                    <evees-help>
+                      <span>
+                        Drafts can be made public to let others read them.<br /><br />
+                        They can only be edited by their creator.
+                      </span>
+                    </evees-help>
+                  </div>
+                </div>
+
+                <!-- <div class="section">
                   <div class="section-header">
                     Delete
                   </div>
                   <div class="section-content">
                     <mwc-button
-                      outlined
                       class="bottom-button"
                       icon="delete_forever"
                       @click=${() => this.delete()}
                       label="Delete"
                     ></mwc-button>
                   </div>
-                </div>
+                </div> -->
               `
             : ''}
 
@@ -368,6 +380,12 @@ export class EveesInfoPage extends EveesInfoBase {
           background-color: rgb(255, 255, 255, 0.6);
           position: relative;
         }
+        .user-icon {
+          padding-top: 8px;
+          width: 48px;
+          height: 48px;
+          cursor: pointer;
+        }
         .section-content {
           padding-top: 3vw;
         }
@@ -377,17 +395,8 @@ export class EveesInfoPage extends EveesInfoBase {
           font-size: 1.6em;
           border-style: solid 2px;
         }
-        .edit-btn {
-          position: absolute;
-          top: 20px;
-          right: 20px;
-        }
-        .row mwc-textfield {
-          margin: 0px 0px 24px 0px;
-        }
-        .perspective-header {
-          border-top-style: solid;
-          border-top-width: 5px;
+        .section-header evees-author {
+          margin: 0 auto;
         }
         .context-menu {
           position: absolute;
@@ -409,14 +418,16 @@ export class EveesInfoPage extends EveesInfoBase {
           min-height: 75px;
         }
         .action-button {
-          margin-bottom: 32px;
+          margin-bottom: 24px;
         }
-        .other-perspectives {
-          border-top: solid 1px #cccccc;
-          margin-top: 1.8vw;
+        .list-container {
           min-height: 200px;
           display: flex;
           flex-direction: column;
+          text-align: left;
+          padding: 6px 12px 0px 16px;
+          font-size: 14px;
+          color: #4e585c;
         }
 
         @media (max-width: 768px) {

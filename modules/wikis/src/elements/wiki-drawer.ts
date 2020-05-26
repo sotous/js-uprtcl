@@ -1,9 +1,6 @@
 import { property, html, css, LitElement } from 'lit-element';
 import { ApolloClient, gql } from 'apollo-boost';
-// import { styleMap } from 'lit-html/directives/style-map';
-// https://github.com/Polymer/lit-html/issues/729
-
-export const styleMap = (style) => {
+const styleMap = (style) => {
   return Object.entries(style).reduce((styleString, [propName, propValue]) => {
     propName = propName.replace(
       /([A-Z])/g,
@@ -104,7 +101,14 @@ export class WikiDrawer extends moduleConnect(LitElement) {
   @property({ attribute: false })
   hasSelectedPage = false;
 
-  homeRef!: string;
+  @property({ attribute: false })
+  firstRefAuthor: string = '';
+
+  @property({ attribute: false })
+  author: string = '';
+
+  @property({ type: Boolean, attribute: 'show-exit' })
+  showExit: boolean = true;
 
   protected client!: ApolloClient<any>;
   protected eveesRemotes!: EveesRemote[];
@@ -126,8 +130,15 @@ export class WikiDrawer extends moduleConnect(LitElement) {
     this.logger.log('firstUpdated()', { ref: this.ref });
 
     this.ref = this.firstRef;
-    this.homeRef = this.firstRef;
     this.loadWiki();
+
+    const firstPerspective = await loadEntity<Signed<Perspective>>(
+      this.client,
+      this.firstRef
+    );
+    if (firstPerspective) {
+      this.firstRefAuthor = firstPerspective.object.payload.creatorId;
+    }
   }
 
   updated(changedProperties) {
@@ -192,6 +203,7 @@ export class WikiDrawer extends moduleConnect(LitElement) {
     );
 
     this.authority = perspective.object.payload.authority;
+    this.author = perspective.object.payload.creatorId;
     this.currentHeadId = headId;
     this.editable = accessControl
       ? this.editableAuthorities.length > 0
@@ -512,12 +524,57 @@ export class WikiDrawer extends moduleConnect(LitElement) {
         <evees-help>
           <span>
             Changes are saved locally on this device until you "push" them.<br /><br />
-            Once pushed they will be visible (if this draft is public).<br /><br />
+            Once pushed they will be visible (if this perspective is public).<br /><br />
             Only pushed changes are included on merge proposals.
           </span>
         </evees-help>
       </section>
     `;
+  }
+
+  renderNavBar() {
+    return html`<section>
+      <div class="nav-bar-top">
+        ${this.showExit
+          ? html`<mwc-button
+              icon="arrow_back"
+              label="exit"
+              @click=${() => this.goBack()}
+            ></mwc-button>`
+          : ''}
+        <mwc-button
+          ?unelevated=${this.ref === this.firstRef}
+          label="official"
+          @click=${() => this.goToHome()}
+        ></mwc-button>
+        <div class="perspective-author-wrapper">
+          ${this.ref !== this.firstRef
+            ? html`<evees-author
+                user-id=${this.author}
+                show-name="false"
+                color=${eveeColor(this.ref)}
+              ></evees-author>`
+            : ''}
+        </div>
+      </div>
+      <div>
+        ${this.renderPageList()}
+      </div>
+
+      ${this.editable
+        ? html`
+            <div class="button-row">
+              <evees-loading-button
+                icon="add_circle_outline"
+                @click=${() => this.newPage()}
+                loading=${this.creatingNewPage ? 'true' : 'false'}
+                label=${this.t('wikis:new-page')}
+              >
+              </evees-loading-button>
+            </div>
+          `
+        : html``}
+    </section>`;
   }
 
   render() {
@@ -535,36 +592,7 @@ export class WikiDrawer extends moduleConnect(LitElement) {
         type="${this.drawerType}"
         ?open="${this.isDrawerOpened}"
       >
-        ${this.renderColorBar()}
-        <section>
-          ${this.isMobile
-            ? html`
-                <div>
-                  <mwc-icon-button
-                    icon="home"
-                    @click=${() => this.goToHome()}
-                  ></mwc-icon-button>
-                </div>
-              `
-            : ''}
-          <div>
-            ${this.renderPageList()}
-          </div>
-
-          ${this.editable
-            ? html`
-                <div class="button-row">
-                  <evees-loading-button
-                    icon="add_circle_outline"
-                    @click=${() => this.newPage()}
-                    loading=${this.creatingNewPage ? 'true' : 'false'}
-                    label=${this.t('wikis:new-page')}
-                  >
-                  </evees-loading-button>
-                </div>
-              `
-            : html``}
-        </section>
+        ${this.renderColorBar()} ${this.renderNavBar()}
 
         <div slot="appContent" class="app-content">
           ${this.isMobile
@@ -572,7 +600,7 @@ export class WikiDrawer extends moduleConnect(LitElement) {
                 <div class="app-top-nav">
                   <mwc-icon-button
                     slot="navigationIcon"
-                    icon="${this.hasSelectedPage ? 'arrow_back_ios' : 'menu'}"
+                    icon="menu"
                     @click=${() => this.toggleNav()}
                   ></mwc-icon-button>
 
@@ -621,16 +649,7 @@ export class WikiDrawer extends moduleConnect(LitElement) {
   }
 
   toggleNav() {
-    // The behavior of the nav icon would change if there is a selected page,
-    // it will function as a back button
-    if (this.hasSelectedPage) {
-      this.selectPage(undefined);
-      this.documentHasChanges = false;
-      return;
-    }
     this.isDrawerOpened = !this.isDrawerOpened;
-    // this.requestUpdate();
-    // console.log(this.isDrawerOpened);
   }
 
   async triggerDocumentPush() {
@@ -645,9 +664,16 @@ export class WikiDrawer extends moduleConnect(LitElement) {
 
   goToHome() {
     this.selectPage(undefined);
-    this.ref = this.homeRef;
-    this.isDrawerOpened = false;
-    this.requestUpdate();
+    this.ref = this.firstRef;
+    if (this.isMobile) {
+      this.isDrawerOpened = false;
+    }
+  }
+
+  goBack() {
+    this.dispatchEvent(
+      new CustomEvent('back', { bubbles: true, composed: true })
+    );
   }
 
   static get styles() {
@@ -673,6 +699,26 @@ export class WikiDrawer extends moduleConnect(LitElement) {
           max-height: 5px;
           flex-shrink: 0;
           width: 100%;
+        }
+        .nav-bar-top {
+          display: flex;
+          width: 100%;
+          justify-content: space-between;
+          padding: 14px 0px 8px 0px;
+          border-color: #a2a8aa;
+          border-bottom-style: solid;
+          border-bottom-width: 1px;
+        }
+        .nav-bar-top .slash {
+          font-size: 28px;
+          margin-right: 6px;
+        }
+        .perspective-author-wrapper {
+          width: 48px;
+          height: 48px;
+        }
+        .nav-bar-top evees-author {
+          cursor: pointer;
         }
         .empty-pages-loader {
           margin-top: 22px;
