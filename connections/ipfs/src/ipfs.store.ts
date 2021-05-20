@@ -59,7 +59,7 @@ export class IpfsStore extends Connection implements CASRemote {
    */
   public async connect(ipfsOptions?: IpfsConnectionOptions): Promise<void> {
     if (!this.client) {
-      this.client = IPFS.create();
+      this.client = await IPFS.create();
     }
   }
 
@@ -109,9 +109,7 @@ export class IpfsStore extends Connection implements CASRemote {
     if (!hash) throw new Error('hash undefined or empty');
 
     try {
-      const client = await this.client;
-      const raw = await client.dag.get(hash);
-      // const raw = await promiseWithTimeout(client.dag.get(hash), 10000);
+      const raw = await promiseWithTimeout(this.client.dag.get(hash), 10000);
       const forceBuffer = Uint8Array.from(raw.value);
       let object = CBOR.decode(forceBuffer.buffer);
       if (LOGINFO) {
