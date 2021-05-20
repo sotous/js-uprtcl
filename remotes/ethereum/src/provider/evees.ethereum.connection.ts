@@ -60,27 +60,27 @@ export class EveesEthereumConnection implements BlockchainConnection {
   getNetworkId() {
     return `eth-${this.connection.getNetworkId()}`;
   }
-  icon(): TemplateResult {
-    let chainName = 'unkown';
-    switch (this.connection.getNetworkId()) {
-      case '1':
-        chainName = 'mainnet';
-      case '4':
-        chainName = 'rinkeby';
-      case '100':
-        chainName = 'xDAI';
-    }
-    return html`
-      <div style="display:flex;align-items: center;color: #636668;font-weight:bold">
-        <div style="height: 28px;width: 28px;margin-right: 6px">${icons.ethereum}</div>
-        ${chainName}
-      </div>
-    `;
-  }
-  avatar(userId: string, config: any = { showName: true }) {
-    return html`<threebox-profile address=${userId} ?show-name=${config.showName}>
-    </threebox-profile> `;
-  }
+  // icon(): TemplateResult {
+  //   let chainName = 'unkown';
+  //   switch (this.connection.getNetworkId()) {
+  //     case '1':
+  //       chainName = 'mainnet';
+  //     case '4':
+  //       chainName = 'rinkeby';
+  //     case '100':
+  //       chainName = 'xDAI';
+  //   }
+  //   return html`
+  //     <div style="display:flex;align-items: center;color: #636668;font-weight:bold">
+  //       <div style="height: 28px;width: 28px;margin-right: 6px">${icons.ethereum}</div>
+  //       ${chainName}
+  //     </div>
+  //   `;
+  // }
+  // avatar(userId: string, config: any = { showName: true }) {
+  //   return html`<threebox-profile address=${userId} ?show-name=${config.showName}>
+  //   </threebox-profile> `;
+  // }
   async getLatestBlock() {
     return this.connection.getLatestBlock();
   }
