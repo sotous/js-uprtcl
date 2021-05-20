@@ -3,6 +3,8 @@ import { html } from 'lit-element';
 import { AccessControl, CASStore, Perspective, Signed } from '@uprtcl/evees';
 import { Lens } from '@uprtcl/evees-ui';
 
+import { PermissionType } from '@uprtcl/evees-http';
+
 export class EveesAccessControlFixedOwner implements AccessControl {
   store!: CASStore;
 
@@ -10,6 +12,14 @@ export class EveesAccessControlFixedOwner implements AccessControl {
 
   setStore(store: CASStore) {
     this.store = store;
+  }
+
+  async toggleDelegate(hash: string, delegate: boolean, delegateTo?: string) {
+
+  }
+
+  async setPublicPermissions(hash: string, type: PermissionType, value: Boolean) {
+    //await this.connection.put(`/permissions/${hash}/public`, { type, value });
   }
 
   async getOwner(perspectiveId: string) {
