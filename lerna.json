@@ -2,11 +2,14 @@
   "packages": [
     "connections/http",
     "connections/ethereum",
+    "connections/ipfs",
     "core/evees",
     "core/evees-ui",
     "core/common-ui",
     "modules/documents",
-    "remotes/http"
+    "remotes/http",
+    "remotes/ethereum",
+    "remotes/blockchain"
   ],
   "version": "independent"
 }
