@@ -3,7 +3,7 @@ import { LitElement, property, html, css, internalProperty } from 'lit-element';
 import { servicesConnect } from '@uprtcl/evees-ui';
 
 import { EveesBlockchain } from './evees.blockchain';
-import { MenuConfig } from '@uprtcl/common-ui';
+import { MenuOptions } from '@uprtcl/common-ui';
 import { ChainConnectionDetails, RemoteUI } from '../types';
 
 export class EveesBlockchainCachedRemoteLense extends servicesConnect(LitElement) {
@@ -26,13 +26,11 @@ export class EveesBlockchainCachedRemoteLense extends servicesConnect(LitElement
   settingCustom = false;
 
   remote!: EveesBlockchain;
-  dialogOptions: MenuConfig = {
-    close: {
+  dialogOptions = [{
       text: 'close',
       icon: 'clear',
       skinny: false,
-    },
-  };
+  }];
   currentConnection!: ChainConnectionDetails;
   connections!: ChainConnectionDetails[];
 
