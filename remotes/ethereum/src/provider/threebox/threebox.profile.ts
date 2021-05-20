@@ -1,6 +1,8 @@
 import { LitElement, property, html, css, query } from 'lit-element';
 // import * as ENS from 'ethereum-ens';
-import { blockies } from './blockies.js.js';
+import { blockies } from './blockies.js';
+import { servicesConnect } from '@uprtcl/evees-ui';
+import { Logger } from '@uprtcl/evees';
 import * as Box from '3box';
 
 const styleMap = (style) => {
@@ -10,7 +12,7 @@ const styleMap = (style) => {
   }, '');
 };
 
-export class ThreeBoxProfile extends moduleConnect(LitElement) {
+export class ThreeBoxProfile extends servicesConnect(LitElement) {
   logger = new Logger('THREEBOX-PROFILE');
 
   @property({ type: String })
