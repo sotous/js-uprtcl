@@ -146,7 +146,7 @@ export class EveesBlockchain implements RemoteEvees {
     if (mutation.updates) {
       mutation.updates.map((update) => {
         const current = eveesData[update.perspectiveId];
-        eveesData[update.perspectiveId] = { ...current, ...update.details };
+        eveesData[update.perspectiveId] = { ...current, ...update.details, ...update.indexData };
       });
     }
 

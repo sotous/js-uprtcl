@@ -22,6 +22,7 @@ export {
   UpdateDetails,
   ForkOf,
   UpdatePerspectiveData,
+  IndexData
 } from './evees/interfaces/types';
 
 /** interfaces */
