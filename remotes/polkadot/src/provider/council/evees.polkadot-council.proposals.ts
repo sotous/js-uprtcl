@@ -1,6 +1,13 @@
 import { html } from 'lit-html';
 
-import { CASStore, Logger, Proposal, ProposalEvents } from '@uprtcl/evees';
+import {
+  Logger,
+  Proposal,
+  ProposalEvents,
+  MutationHelper,
+  EntityResolver,
+  EntityRemoteBuffered,
+} from '@uprtcl/evees';
 import { Lens, ProposalsWithUI } from '@uprtcl/evees-ui';
 
 import { PolkadotConnection } from '../../connection.polkadot';
@@ -13,7 +20,6 @@ import EventEmitter from 'events';
 export class ProposalsPolkadotCouncil implements ProposalsWithUI {
   logger = new Logger('PROPOSALS-POLKADOT-COUNCIL');
 
-  public store!: CASStore;
   events: EventEmitter;
 
   private canProposeCache = false;
@@ -21,6 +27,8 @@ export class ProposalsPolkadotCouncil implements ProposalsWithUI {
   constructor(
     public connection: PolkadotConnection,
     public councilStore: PolkadotCouncilEveesStorage,
+    public entityResolver: EntityResolver,
+    public entityRemote: EntityRemoteBuffered,
     public remoteId: string,
     public config: ProposalConfig
   ) {
@@ -35,19 +43,12 @@ export class ProposalsPolkadotCouncil implements ProposalsWithUI {
     }
   }
 
-  async ready(): Promise<void> {
-    await this.init();
-    await this.councilStore.ready();
-  }
+  async init(): Promise<void> {
+    if (!this.connection.account) throw new Error('Polkadot connection not ready');
 
-  setStore(store: CASStore) {
-    this.store = store;
-  }
-
-  async init() {
-    if (!this.connection.account) return false;
     const council = await this.connection.getCouncil();
     this.canProposeCache = council.includes(this.connection.account);
+    await this.councilStore.init();
   }
 
   async canPropose() {
@@ -59,7 +60,6 @@ export class ProposalsPolkadotCouncil implements ProposalsWithUI {
   }
 
   async createProposal(proposal: Proposal): Promise<string> {
-    await this.ready();
     this.logger.info('createProposal()', { proposal });
 
     const proposalManifest: ProposalManifest = {
@@ -75,9 +75,14 @@ export class ProposalsPolkadotCouncil implements ProposalsWithUI {
     };
 
     /** persist entities associated to this mutation */
-    if (proposal.mutation.entities) {
-      await this.store.storeEntities(proposal.mutation.entities);
-      await this.store.flush();
+    if (proposal.mutation) {
+      const hashes = await MutationHelper.getMutationEntitiesHashes(
+        proposal.mutation,
+        this.entityResolver
+      );
+      const entities = await this.entityResolver.getEntities(hashes);
+      await this.entityRemote.putEntities(entities);
+      await this.entityRemote.flush();
     }
 
     const proposalId = await this.councilStore.createProposal(proposalManifest);
@@ -93,8 +98,6 @@ export class ProposalsPolkadotCouncil implements ProposalsWithUI {
   }
 
   async getProposal(proposalId: string): Promise<Proposal> {
-    await this.ready();
-
     this.logger.info('getProposal() - pre', { proposalId });
 
     const proposalManifest = await this.councilStore.getProposalManifest(proposalId);
@@ -116,7 +119,6 @@ export class ProposalsPolkadotCouncil implements ProposalsWithUI {
   }
 
   async getProposalsToPerspective(perspectiveId: string): Promise<string[]> {
-    await this.ready();
     return this.councilStore.getProposalsToPerspective(perspectiveId);
   }
 

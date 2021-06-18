@@ -1,9 +1,15 @@
-import { css, html, internalProperty, property } from 'lit-element';
+import { css, html, property, internalProperty } from 'lit-element';
 
 import { icons } from '@uprtcl/common-ui';
-import { RemoteEvees, Logger, RemoteLoggedEvents } from '@uprtcl/evees';
+import {
+  ClientRemote,
+  ConnectionLoggedEvents,
+  Evees,
+  Logger,
+  RecursiveContextMergeStrategy,
+} from '@uprtcl/evees';
 
-import { EveesBaseElement } from './evees-base';
+import { EveesBaseElement } from './evees-base-element';
 
 export enum EditableCase {
   IS_OFFICIAL_DONT_HAVE_DRAFT = 'IS_OFFICIAL_DONT_HAVE_DRAFT',
@@ -23,20 +29,24 @@ export class EveesBaseEditable<T extends object> extends EveesBaseElement<T> {
   isLoggedEdit = false;
 
   @internalProperty()
+  hasPull: boolean = false;
+
+  @internalProperty()
   protected case: EditableCase = EditableCase.IS_OFFICIAL_DONT_HAVE_DRAFT;
 
   protected mineId: string | undefined = undefined;
-  protected editRemote!: RemoteEvees;
+  protected editRemote!: ClientRemote;
+  protected eveesPull!: Evees;
 
   async firstUpdated() {
     this.uref = this.firstRef;
     this.remote = this.evees.remotes[0];
     this.editRemote = this.evees.remotes.length > 1 ? this.evees.remotes[1] : this.evees.remotes[0];
 
-    this.checkLoggedOnEdit();
+    await this.checkLoggedOnEdit();
 
     if (this.editRemote.events) {
-      this.editRemote.events.on(RemoteLoggedEvents.logged_status_changed, () =>
+      this.editRemote.events.on(ConnectionLoggedEvents.logged_status_changed, () =>
         this.checkLoggedOnEdit()
       );
     }
@@ -44,12 +54,14 @@ export class EveesBaseEditable<T extends object> extends EveesBaseElement<T> {
     await super.firstUpdated();
 
     if (this.remote.events) {
-      this.remote.events.on(RemoteLoggedEvents.logged_out, () => this.seeOfficial());
-      this.remote.events.on(RemoteLoggedEvents.logged_status_changed, () => this.load());
+      this.remote.events.on(ConnectionLoggedEvents.logged_out, () => this.seeOfficial());
+      this.remote.events.on(ConnectionLoggedEvents.logged_status_changed, () => this.load());
     }
   }
 
   updated(changedProperties) {
+    super.updated(changedProperties);
+
     if (changedProperties.has('firstRef') && changedProperties.get('firstRef')) {
       this.uref = this.firstRef;
       this.load();
@@ -61,21 +73,28 @@ export class EveesBaseEditable<T extends object> extends EveesBaseElement<T> {
   }
 
   async load() {
+    if (!this.localEvees) return;
+
     await super.load();
 
-    /** it's assumed that there is only one fork per user on the remote  */
-    if (!this.editRemote.searchEngine) {
-      throw new Error(`search engine not defined for remote ${this.editRemote.id}`);
+    if (!this.editRemote.explore) {
+      throw new Error('explore is undefined');
     }
 
-    const { perspectiveIds: drafts } = await this.editRemote.searchEngine.explore({
-      under: { elements: [{ id: this.firstRef }] },
-      forks: { include: true, independent: true },
+    const { perspectiveIds: drafts } = await this.editRemote.explore({
+      start: { elements: [{ id: this.firstRef, forks: { independent: true } }] },
     });
+
     this.mineId = drafts.length > 0 ? drafts[0] : undefined;
     this.logger.log('BaseDraft -- load() set mineId', this.mineId);
 
     this.checkCase();
+
+    await this.checkPull();
+  }
+
+  async loadData() {
+    await super.load();
   }
 
   isDraft() {
@@ -105,11 +124,35 @@ export class EveesBaseEditable<T extends object> extends EveesBaseElement<T> {
       }
     }
 
-    // neale subclasses to react to case change
+    // hook for subclasses to react to case change
     this.caseUpdated ? this.caseUpdated(current) : null;
   }
 
   caseUpdated?(oldCase: EditableCase);
+
+  async checkPull(recurse: boolean = true) {
+    this.hasPull = false;
+
+    if (this.case === EditableCase.IS_DRAFT_HAS_OFFICIAL) {
+      const config = {
+        forceOwner: true,
+        recurse,
+      };
+
+      // Create a temporary workspaces to compute the merge
+      this.eveesPull = this.evees.clone('pull-client');
+      const merger = new RecursiveContextMergeStrategy(this.eveesPull);
+      await merger.mergePerspectivesExternal(this.mineId as string, this.firstRef, config);
+
+      const diff = await this.eveesPull.diff();
+      this.hasPull = diff.updates.length > 0;
+    }
+  }
+
+  async pullChanges() {
+    await this.eveesPull.flush();
+    await this.checkPull();
+  }
 
   async checkoutDraft(recurse: boolean = true) {
     if (this.mineId) {
@@ -130,8 +173,9 @@ export class EveesBaseEditable<T extends object> extends EveesBaseElement<T> {
   async createDraft(recurse: boolean = true): Promise<void> {
     this.mineId = await this.evees.forkPerspective(this.firstRef, this.editRemote.id, undefined, {
       recurse,
+      detach: false,
     });
-    await this.evees.client.flush();
+    await this.evees.flush();
     this.logger.log('BaseDraft -- createDraft()', this.mineId);
     return this.seeDraft();
   }
@@ -140,13 +184,13 @@ export class EveesBaseEditable<T extends object> extends EveesBaseElement<T> {
     this.logger.log('seeDraft -- seeDraft()', this.mineId);
     if (!this.mineId) throw new Error(`mineId not defined`);
     this.uref = this.mineId;
-    return this.load();
+    return this.loadData();
   }
 
   async seeOfficial(): Promise<void> {
     this.logger.log('BaseDraft -- seeOfficial()', this.mineId);
     this.uref = this.firstRef;
-    return this.load();
+    return this.loadData();
   }
 
   renderInfo() {
@@ -172,7 +216,7 @@ export class EveesBaseEditable<T extends object> extends EveesBaseElement<T> {
         break;
 
       case EditableCase.IS_DRAFT_HAS_OFFICIAL:
-        text = 'see original';
+        text = 'editing';
         textColor = ' blue-color';
         circleColor = ' blue-background';
         break;
@@ -186,13 +230,20 @@ export class EveesBaseEditable<T extends object> extends EveesBaseElement<T> {
         break;
     }
 
-    return html`<div
+    return html` <div
       @click=${() => this.toggleDraft()}
       class=${'edit-control-container' + (clickable ? ' clickable' : '')}
     >
-      <div class=${'action-text' + textColor}>${text}</div>
-      <div class=${'action-circle' + circleColor}>
-        ${circleText !== undefined ? circleText : icons.edit}
+      <div class="left-control">
+        ${this.hasPull
+          ? html`<uprtcl-button @click=${() => this.pullChanges()}>pull</uprtcl-button>`
+          : ''}
+      </div>
+      <div class="right-control">
+        <div class=${'action-text' + textColor}>${text}</div>
+        <div class=${'action-circle' + circleColor}>
+          ${circleText !== undefined ? circleText : icons.edit}
+        </div>
       </div>
     </div>`;
   }
@@ -206,6 +257,17 @@ export class EveesBaseEditable<T extends object> extends EveesBaseElement<T> {
           justify-content: flex-end;
           padding: 0 0.7rem;
           margin: 1rem 0rem;
+        }
+        .left-control {
+          flex: 1 0 auto;
+          display: flex;
+          align-items: center;
+          justify-content: flex-start;
+        }
+        .right-control {
+          flex: 0 0 auto;
+          display: flex;
+          align-items: center;
         }
         .action-text {
           margin-right: 6px;

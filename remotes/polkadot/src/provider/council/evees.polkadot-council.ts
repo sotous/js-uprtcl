@@ -1,21 +1,26 @@
 import { EventEmitter } from 'events';
 
 import {
-  RemoteEvees,
+  ClientRemote,
   Perspective,
   NewPerspective,
   Secured,
   Logger,
-  CASStore,
   PartialPerspective,
   snapDefaultPerspective,
   EveesMutation,
-  EveesMutationCreate,
   PerspectiveGetResult,
-  SearchEngine,
   Update,
-  RemoteLoggedEvents,
   ClientEvents,
+  ConnectionLoggedEvents,
+  EveesMutationCreate,
+  GetPerspectiveOptions,
+  SearchOptions,
+  SearchResult,
+  ClientExplore,
+  EntityRemote,
+  EntityRemoteBuffered,
+  EntityResolver,
 } from '@uprtcl/evees';
 import { EveesAccessControlFixedOwner } from '@uprtcl/evees-blockchain';
 
@@ -26,24 +31,37 @@ import { ProposalConfig } from './proposal.config.types';
 
 const evees_if = 'council';
 
-export class EveesPolkadotCouncil implements RemoteEvees {
+export class EveesPolkadotCouncil implements ClientRemote {
   logger: Logger = new Logger('EveesPolkadot');
 
   accessControl: EveesAccessControlFixedOwner;
-  store!: CASStore;
   proposals: ProposalsPolkadotCouncil;
   councilStorage: PolkadotCouncilEveesStorage;
-  searchEngine!: SearchEngine;
   events!: EventEmitter;
 
   constructor(
     readonly connection: PolkadotConnection,
-    readonly casID: string,
-    readonly config: ProposalConfig
+    readonly entityResolver: EntityResolver,
+    readonly entityRemote: EntityRemoteBuffered,
+    readonly explorer: ClientExplore,
+    readonly config: ProposalConfig,
+    readonly casID?: string
   ) {
     this.accessControl = new EveesAccessControlFixedOwner();
-    this.councilStorage = new PolkadotCouncilEveesStorage(connection, config, this.casID);
-    this.proposals = new ProposalsPolkadotCouncil(connection, this.councilStorage, this.id, config);
+    this.councilStorage = new PolkadotCouncilEveesStorage(
+      connection,
+      entityResolver,
+      entityRemote,
+      config
+    );
+    this.proposals = new ProposalsPolkadotCouncil(
+      connection,
+      this.councilStorage,
+      entityResolver,
+      entityRemote,
+      this.id,
+      config
+    );
 
     this.events = new EventEmitter();
     this.events.setMaxListeners(1000);
@@ -53,13 +71,6 @@ export class EveesPolkadotCouncil implements RemoteEvees {
         this.events.emit(ClientEvents.updated, perpectiveIds);
       });
     }
-  }
-
-  setStore(store: CASStore) {
-    this.store = store;
-    this.accessControl.setStore(store);
-    this.councilStorage.setStore(store);
-    this.proposals.setStore(store);
   }
 
   get id() {
@@ -75,7 +86,7 @@ export class EveesPolkadotCouncil implements RemoteEvees {
   }
 
   async ready(): Promise<void> {
-    await Promise.all([this.councilStorage.ready()]);
+    await Promise.all([this.councilStorage.init()]);
   }
 
   async canUpdate(uref: string) {
@@ -92,9 +103,7 @@ export class EveesPolkadotCouncil implements RemoteEvees {
     const details = await this.councilStorage.getPerspective(perspectiveId);
     return { details: { ...details } };
   }
-  update(mutation: EveesMutationCreate) {
-    throw new Error('Method not implemented.');
-  }
+
   newPerspective(newPerspective: NewPerspective): Promise<void> {
     throw new Error('Method not implemented.');
   }
@@ -104,6 +113,10 @@ export class EveesPolkadotCouncil implements RemoteEvees {
   updatePerspective(update: Update): Promise<void> {
     throw new Error('Method not implemented.');
   }
+  update(mutation: EveesMutationCreate): Promise<void> {
+    throw new Error('Method not implemented.');
+  }
+
   diff(): Promise<EveesMutation> {
     throw new Error('Method not implemented.');
   }
@@ -116,8 +129,16 @@ export class EveesPolkadotCouncil implements RemoteEvees {
   clear(): Promise<void> {
     throw new Error('Method not implemented.');
   }
+
   getUserPerspectives(perspectiveId: string): Promise<string[]> {
     throw new Error('Method not implemented.');
+  }
+
+  explore(
+    searchOptions: SearchOptions,
+    fetchOptions?: GetPerspectiveOptions | undefined
+  ): Promise<SearchResult> {
+    return this.explorer.explore(searchOptions, fetchOptions);
   }
 
   async isLogged() {
@@ -128,15 +149,15 @@ export class EveesPolkadotCouncil implements RemoteEvees {
     await this.connection.connectWallet();
     await this.proposals.init();
 
-    this.events.emit(RemoteLoggedEvents.logged_in);
-    this.events.emit(RemoteLoggedEvents.logged_status_changed);
+    this.events.emit(ConnectionLoggedEvents.logged_in);
+    this.events.emit(ConnectionLoggedEvents.logged_status_changed);
   }
 
   async logout(): Promise<void> {
     await this.connection.disconnectWallet();
 
-    this.events.emit(RemoteLoggedEvents.logged_out);
-    this.events.emit(RemoteLoggedEvents.logged_status_changed);
+    this.events.emit(ConnectionLoggedEvents.logged_out);
+    this.events.emit(ConnectionLoggedEvents.logged_status_changed);
   }
 
   async connect() {

@@ -26,13 +26,19 @@ export class EveesBlockchainCachedRemoteLense extends servicesConnect(LitElement
   settingCustom = false;
 
   remote!: EveesBlockchain;
-  dialogOptions = [{
+  dialogOptions: MenuOptions = new Map();
+
+  currentConnection!: ChainConnectionDetails;
+  connections!: ChainConnectionDetails[];
+
+  constructor() {
+    super();
+    this.dialogOptions.set('close', {
       text: 'close',
       icon: 'clear',
       skinny: false,
-  }];
-  currentConnection!: ChainConnectionDetails;
-  connections!: ChainConnectionDetails[];
+    });
+  }
 
   async firstUpdated() {
     this.remote = this.evees.getRemote<EveesBlockchain>(this.remoteId);

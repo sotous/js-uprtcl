@@ -39,23 +39,19 @@ export class EveesPerspectivesList extends servicesConnect(LitElement) {
   async load() {
     this.loadingPerspectives = true;
 
-    if (!this.evees.client.searchEngine) {
-      throw new Error(`search engine not defined`);
-    }
-
-    const { perspectiveIds: otherPerspectives } = await this.evees.client.searchEngine.explore({
-      under: { elements: [{ id: this.perspectiveId }] },
+    const { perspectiveIds: otherPerspectives } = await this.evees.explore({
+      start: { elements: [{ id: this.perspectiveId }] },
     });
 
     const perspectivesData: PerspectiveData[] = await Promise.all(
       otherPerspectives.map(
         async (fork): Promise<PerspectiveData> => {
           /** data on this perspective */
-          const perspective = await this.evees.client.store.getEntity(fork);
+          const perspective = await this.evees.getEntity(fork);
           const remote = this.evees.remotes.find((r) => r.id === perspective.object.payload.remote);
           if (!remote) throw new Error(`remote not found for ${perspective.object.payload.remote}`);
           return {
-            id: perspective.id,
+            id: perspective.hash,
             name: perspective.object.name,
             creatorId: perspective.object.payload.creatorId,
             timestamp: perspective.object.payload.timestamp,

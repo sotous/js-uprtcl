@@ -11,7 +11,7 @@ export class RecursiveContextMergeStrategy extends SimpleMergeStrategy {
   perspectivesByContext: Map<string, FromTo> = new Map();
 
   async isPattern(id: string, type: string): Promise<boolean> {
-    const entity = await this.evees.client.store.getEntity(id);
+    const entity = await this.evees.getEntity(id);
     if (entity === undefined) throw new Error('entity not found');
     const recongnizedType = this.evees.recognizer.recognizeType(entity.object);
     return type === recongnizedType;
@@ -36,7 +36,7 @@ export class RecursiveContextMergeStrategy extends SimpleMergeStrategy {
     const context = await this.evees.getPerspectiveContext(perspectiveId);
     this.setPerspective(perspectiveId, context, to);
 
-    const { details } = await this.evees.client.getPerspective(perspectiveId);
+    const { details } = await this.evees.getPerspective(perspectiveId);
 
     if (details.headId == null) {
       return;
@@ -122,51 +122,51 @@ export class RecursiveContextMergeStrategy extends SimpleMergeStrategy {
     const dictionary = this.perspectivesByContext;
 
     const mergeLinks = mergedLinks.map(
-      async (link): Promise<string> => {
-        const perspectivesByContext = dictionary.get(link);
+      async (context): Promise<string> => {
+        const perspectivesByContext = dictionary.get(context);
+        if (!perspectivesByContext)
+          throw new Error(`perspectivesByContext not found for ${context}`);
 
-        if (perspectivesByContext) {
-          const needsSubperspectiveMerge =
-            perspectivesByContext.to !== undefined && perspectivesByContext.from !== undefined;
+        const recurse = config.recurse === undefined ? true : config.recurse;
 
-          if (needsSubperspectiveMerge) {
-            /** Two perspectives of the same context are merged, keeping the "to" perspecive id,
-             *  and updating its head (here is where recursion start) */
+        const needsSubperspectiveMerge =
+          perspectivesByContext.to !== undefined && perspectivesByContext.from !== undefined;
 
-            config = {
-              guardianId: perspectivesByContext.to,
-              ...config,
-            };
+        if (recurse && needsSubperspectiveMerge) {
+          /** Two perspectives of the same context are merged, keeping the "to" perspecive id,
+           *  and updating its head (here is where recursion start) */
 
-            await this.mergePerspectives(
-              perspectivesByContext.to as string,
-              perspectivesByContext.from as string,
-              config
-            );
+          config = {
+            guardianId: perspectivesByContext.to,
+            ...config,
+          };
 
-            return perspectivesByContext.to as string;
+          await this.mergePerspectives(
+            perspectivesByContext.to as string,
+            perspectivesByContext.from as string,
+            config
+          );
+
+          return perspectivesByContext.to as string;
+        } else {
+          if (perspectivesByContext.to) {
+            /** if the perspective is only present in the "to", just keep it */
+            return perspectivesByContext.to;
           } else {
-            if (perspectivesByContext.to) {
-              /** if the perspective is only present in the "to", just keep it */
-              return perspectivesByContext.to;
+            /** otherwise, if merge config.forceOwner and this perspective is only present in the
+             * "from", a fork will be created using parentId as the source for permissions*/
+            if (config.forceOwner) {
+              const newPerspectiveId = await this.evees.forkPerspective(
+                perspectivesByContext.from as string,
+                config.remote,
+                config.guardianId,
+                { recurse: true, detach: config.detach !== undefined ? config.detach : false }
+              );
+              return newPerspectiveId;
             } else {
-              /** otherwise, if merge config.forceOwner and this perspective is only present in the
-               * "from", a fork will be created using parentId as the source for permissions*/
-              if (config.forceOwner) {
-                const newPerspectiveId = await this.evees.forkPerspective(
-                  perspectivesByContext.from as string,
-                  config.remote,
-                  config.guardianId,
-                  { recurse: true, detach: config.detach !== undefined ? config.detach : false }
-                );
-                return newPerspectiveId;
-              } else {
-                return perspectivesByContext.from as string;
-              }
+              return perspectivesByContext.from as string;
             }
           }
-        } else {
-          return link;
         }
       }
     );

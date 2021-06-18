@@ -1,17 +1,17 @@
 import { html } from 'lit-element';
 
-import { AccessControl, CASStore, Perspective, Signed } from '@uprtcl/evees';
+import { AccessControl, EntityResolver, Perspective, Signed } from '@uprtcl/evees';
 import { Lens } from '@uprtcl/evees-ui';
 
 import { PermissionType } from '@uprtcl/evees-http';
 
 export class EveesAccessControlFixedOwner implements AccessControl {
-  store!: CASStore;
+  entityResolver!: EntityResolver;
 
   constructor() {}
 
-  setStore(store: CASStore) {
-    this.store = store;
+  setEntityResolver(entityResolver: EntityResolver) {
+    this.entityResolver = entityResolver;
   }
 
   async toggleDelegate(hash: string, delegate: boolean, delegateTo?: string) {
@@ -23,7 +23,7 @@ export class EveesAccessControlFixedOwner implements AccessControl {
   }
 
   async getOwner(perspectiveId: string) {
-    const perspective = await this.store.getEntity<Signed<Perspective>>(perspectiveId);
+    const perspective = await this.entityResolver.getEntity<Signed<Perspective>>(perspectiveId);
     return perspective.object.payload.creatorId;
   }
 

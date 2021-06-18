@@ -1,14 +1,6 @@
-import { Behaviour } from '../../patterns/interfaces/behaviour';
-import { Secured } from '../../cas/utils/cid-hash';
-import { Entity, EntityCreate } from '../../cas/interfaces/entity';
-
-import { RemoteEvees } from './remote.evees';
-import { Evees } from '../evees.service';
-
-export declare enum Join {
-  inner = 'INNER_JOIN',
-  full = 'FULL_JOIN',
-}
+import { Entity } from './entity';
+import { ClientRemote } from './client.remote';
+import { Signed } from '../../patterns';
 
 /** Core perspective format. A perspective is like a URL, it includes the coordinates to reach a current head.
  * The hash of the perspective is the perspective id. */
@@ -47,7 +39,6 @@ export interface Commit {
 export interface Update {
   perspectiveId: string;
   details: PerspectiveDetails;
-  oldDetails?: PerspectiveDetails;
   fromPerspectiveId?: string;
   indexData?: IndexData;
 }
@@ -137,14 +128,13 @@ export interface EveesMutation {
   newPerspectives: NewPerspective[];
   updates: Update[];
   deletedPerspectives: string[];
-  entities: Entity[];
 }
 
 export interface EveesMutationCreate {
   newPerspectives?: NewPerspective[];
   updates?: Update[];
   deletedPerspectives?: string[];
-  entities?: EntityCreate[];
+  entities?: Entity[];
 }
 
 export interface EveesOptions {
@@ -154,32 +144,13 @@ export interface EveesOptions {
   updatedBefore?: number;
   updatedAfter?: number;
 }
-export interface JoinElement {
-  id: string;
-  levels?: number;
-  negation?: boolean;
-}
-
-export interface SearchOptionsJoin {
-  type?: Join.inner | Join.full;
-  elements: JoinElement[];
-}
-
-export interface SearchOptionsEcoJoin extends SearchOptionsJoin {
-  levels?: number;
-}
 
 export interface SearchOptions {
-  under?: SearchOptionsEcoJoin;
-  above?: SearchOptionsEcoJoin;
-  linksTo?: SearchOptionsJoin;
+  start?: SearchOptionsTree;
+  linksTo?: SearchOptionsLink;
   text?: {
     value: string;
-    levels?: number;
-  };
-  forks?: {
-    include: boolean;
-    independent: boolean;
+    textLevels?: number;
   };
   orderBy?: string;
   pagination?: {
@@ -188,8 +159,32 @@ export interface SearchOptions {
   };
 }
 
-export interface SearchForkOptions {
+export enum Join {
+  inner = 'INNER_JOIN',
+  full = 'FULL_JOIN',
+}
+
+export interface SearchOptionsTree {
+  joinType?: Join.inner | Join.full;
+  elements: JoinTree[];
+}
+
+export interface SearchOptionsLink {
+  joinType?: Join.inner | Join.full;
+  elements: string[];
+}
+
+export interface JoinTree {
+  id: string;
+  direction?: 'under' | 'above';
   levels?: number;
+  forks?: SearchForkOptions;
+}
+
+export interface SearchForkOptions {
+  exclusive?: boolean;
+  independent?: boolean;
+  independentOf?: string;
 }
 
 export interface SearchResult {
@@ -205,14 +200,14 @@ export interface ParentAndChild {
 }
 
 export interface ForkOf {
-  forkId: string;
+  forkIds: string[];
   ofPerspectiveId: string;
   atHeadId?: string;
 }
 
 export interface EveesConfig {
-  defaultRemote?: RemoteEvees;
-  officialRemote?: RemoteEvees;
+  defaultRemote?: ClientRemote;
+  officialRemote?: ClientRemote;
   editableRemotesIds?: string[];
   emitIf?: {
     remote: string;
@@ -238,6 +233,10 @@ export interface UpdatePerspectiveData {
 }
 
 export interface FlushConfig {
-  debounce: number;
-  autoflush: boolean;
+  debounce?: number;
+  autoflush?: boolean;
+  levels?: number;
+  condensate?: boolean;
 }
+
+export type Secured<T> = Entity<Signed<T>>;

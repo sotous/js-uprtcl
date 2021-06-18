@@ -14,6 +14,7 @@ import {
   Evees,
   UpdatePerspectiveData,
   CreateEvee,
+  FlushConfig,
 } from '@uprtcl/evees';
 import { servicesConnect, eveeColor } from '@uprtcl/evees-ui';
 
@@ -53,11 +54,8 @@ export class DocumentEditor extends servicesConnect(LitElement) {
   @property({ type: String })
   color!: string;
 
-  @property({ type: Number })
-  debounce!: number;
-
-  @property({ type: Boolean })
-  autoflush: boolean = false;
+  @property({ type: Object })
+  flushConfig!: FlushConfig;
 
   @internalProperty()
   getEveeInfo!: Function;
@@ -113,7 +111,7 @@ export class DocumentEditor extends servicesConnect(LitElement) {
       reload = true;
     }
 
-    if (changedProperties.has('editable')) {
+    if (changedProperties.has('readOnly')) {
       reload = true;
     }
 
@@ -129,8 +127,6 @@ export class DocumentEditor extends servicesConnect(LitElement) {
   }
 
   async loadDoc() {
-    if (!this.localEvees.client) return;
-
     if (LOGINFO) this.logger.log('loadDoc()', this.uref);
 
     if (!this.uref) return;
@@ -163,7 +159,7 @@ export class DocumentEditor extends servicesConnect(LitElement) {
   }
 
   async refToNode(uref: string, parent?: DocNode, ix?: number) {
-    const entity = await this.localEvees.client.store.getEntity(uref);
+    const entity = await this.localEvees.getEntity(uref);
 
     let entityType = this.localEvees.recognizer.recognizeType(entity.object);
 
@@ -172,10 +168,10 @@ export class DocumentEditor extends servicesConnect(LitElement) {
     let remoteId: string | undefined;
 
     if (entityType === PerspectiveType) {
-      const remote = await this.localEvees.getPerspectiveRemote(entity.id);
+      const remote = await this.localEvees.getPerspectiveRemote(entity.hash);
       remoteId = remote.id;
 
-      const { details } = await this.localEvees.client.getPerspective(uref, { levels: -1 });
+      const { details } = await this.localEvees.getPerspective(uref, { levels: -1 });
       const headId = details.headId;
 
       if (!this.readOnly) {
@@ -188,7 +184,7 @@ export class DocumentEditor extends servicesConnect(LitElement) {
         editable = false;
       }
 
-      const head = headId ? await this.localEvees.client.store.getEntity(headId) : undefined;
+      const head = headId ? await this.localEvees.getEntity(headId) : undefined;
       dataId = head ? head.object.payload.dataId : undefined;
     } else {
       if (entityType === CommitType) {
@@ -197,7 +193,7 @@ export class DocumentEditor extends servicesConnect(LitElement) {
         editable = parent.editable;
         remoteId = parent.remoteId;
 
-        const head = await this.localEvees.client.store.getEntity(uref);
+        const head = await this.localEvees.getEntity(uref);
         dataId = head ? head.object.payload.dataId : undefined;
       } else {
         entityType = 'Data';
@@ -210,7 +206,7 @@ export class DocumentEditor extends servicesConnect(LitElement) {
     if (!dataId || !entityType) throw Error(`data not loaded for uref ${uref}`);
 
     // TODO get data and patterns hasChildren/hasDocNodeLenses from query
-    const data = await this.localEvees.client.store.getEntity(dataId);
+    const data = await this.localEvees.getEntity(dataId);
     const dataType = this.localEvees.recognizer.recognizeType(data.object);
     const canConvertTo = this.customBlocks
       ? Object.getOwnPropertyNames(this.customBlocks[dataType].canConvertTo)
@@ -228,7 +224,7 @@ export class DocumentEditor extends servicesConnect(LitElement) {
     const level = this.getLevel(coord);
 
     const node: DocNode = {
-      uref: entity.id,
+      uref: entity.hash,
       remoteId,
       type: entityType,
       ix,
@@ -271,13 +267,13 @@ export class DocumentEditor extends servicesConnect(LitElement) {
     /** snap is async because it performs a hash, should be fast enough for UX flow */
     const perspective = await this.localEvees.getRemote(remoteId).snapPerspective({});
     /** Perspective entity is created and await for it to be ready for immediate reading. */
-    await this.localEvees.client.store.storeEntity(perspective);
+    await this.localEvees.putEntity(perspective);
 
     const creteEvee: CreateEvee = {
       object: draft,
       guardianId: parent ? parent.uref : undefined,
       remoteId: remoteId,
-      perspectiveId: perspective.id,
+      perspectiveId: perspective.hash,
       indexData: {
         linkChanges: {
           onEcosystem: {
@@ -300,7 +296,7 @@ export class DocumentEditor extends servicesConnect(LitElement) {
     const level = this.getLevel(coord);
 
     return {
-      uref: perspective.id,
+      uref: perspective.hash,
       remoteId,
       ix,
       parent,
@@ -319,6 +315,11 @@ export class DocumentEditor extends servicesConnect(LitElement) {
     // optimistically set the dratf
     node.draft = draft;
 
+    /** index onEcosystem.
+     * onEcosystem is not really a formal and exaustive list
+     * of the perspective onEcosystem (all other perspectives of which
+     * this perspective is on their ecosystem), but a local mark used
+     * to flush portions of mutations based on their parents. */
     const parents: string[] = [node.uref];
     let parent = node.parent;
     while (parent !== undefined) {
@@ -339,13 +340,7 @@ export class DocumentEditor extends servicesConnect(LitElement) {
           },
         },
       },
-      flush:
-        this.debounce !== undefined || this.autoflush !== undefined
-          ? {
-              debounce: this.debounce,
-              autoflush: this.autoflush,
-            }
-          : undefined,
+      flush: this.flushConfig,
     };
 
     if (LOGINFO) this.logger.log('updatePerspectiveData()', { update });
@@ -684,7 +679,7 @@ export class DocumentEditor extends servicesConnect(LitElement) {
 
     const newObject = await this.customBlocks[node.draftType].canConvertTo[type](
       node,
-      this.localEvees.client
+      this.localEvees
     );
 
     /** update all the node properties */
@@ -886,26 +881,26 @@ export class DocumentEditor extends servicesConnect(LitElement) {
     // for the topNode (the docId), the uref can change, for the other nodes it can't (if it does, a new editor is rendered)
     const uref = node.coord.length === 1 && node.coord[0] === 0 ? this.uref : node.uref;
 
-    let paddingTop = '0px';
+    let marginTop = '-2.5px';
     if (node.draft.type === TextType.Title) {
       switch (node.level) {
         case 0:
-          paddingTop = '2px';
+          marginTop = '7px';
           break;
         case 1:
-          paddingTop = '2px';
+          marginTop = '4px';
           break;
         case 2:
-          paddingTop = '2px';
+          marginTop = '2px';
           break;
         default:
-          paddingTop = '2px';
+          marginTop = '2px';
           break;
       }
     }
 
     if (node.draftType === 'Quantity') {
-      paddingTop = '14px';
+      marginTop = '14px';
     }
 
     return html`
@@ -915,8 +910,10 @@ export class DocumentEditor extends servicesConnect(LitElement) {
         @drop=${(e) => this.handleDrop(e, node)}
       >
         ${this.showInfo
-          ? html` <div class="evee-info" style=${`padding-top:${paddingTop}`}>
-              ${this.getEveeInfo ? this.getEveeInfo(uref) : ''}
+          ? html` <div class="evee-info" style=${`margin-top:${marginTop}`}>
+              ${this.getEveeInfo
+                ? this.getEveeInfo({ uref, parentId: node.parent ? node.parent.uref : undefined })
+                : ''}
             </div>`
           : html`<div class="empty-evees-info"></div>`}
         <div class="node-content">
@@ -1019,7 +1016,8 @@ export class DocumentEditor extends servicesConnect(LitElement) {
       }
 
       * {
-        font-family: 'Lora', serif;
+        font-family: 'Lora', 'normal';
+        line-height: 1.8rem;
       }
 
       .editor-container {
@@ -1075,9 +1073,6 @@ export class DocumentEditor extends servicesConnect(LitElement) {
         margin: 0 0.2rem;
         height: inherit;
       }
-      .doc-endSpace {
-        /* height: 50vh; */
-      }
       .publish-button {
         width: 190px;
       }
@@ -1099,7 +1094,8 @@ export class DocumentEditor extends servicesConnect(LitElement) {
       .evee-info {
         display: flex;
         flex-direction: column;
-        justify-content: center;
+        justify-content: start;
+        margin-right: 0.9vw;
       }
 
       .empty-evees-info {
