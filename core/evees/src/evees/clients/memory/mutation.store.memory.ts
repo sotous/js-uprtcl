@@ -47,15 +47,14 @@ export class MutationStoreMemory implements ClientMutationStore {
 
     /** update the details (append onEcosystem tags) */
     const currentDetails = this.perspectivesDetails.get(update.perspectiveId);
-    let onEcosystem = currentDetails ? currentDetails.onEcosystem : [];
+    let onEcosystem = currentDetails ? currentDetails.onEcosystem : [update.perspectiveId];
 
     if (
       update.indexData &&
       update.indexData.linkChanges &&
       update.indexData.linkChanges.onEcosystem
     ) {
-      /** use function to remove existing values from ecosystme if in the
-       * removed array of the update indexData */
+      /** use function to merge the onEcosystem array */
       const newChanges = IndexDataHelper.appendArrayChanges(
         { added: onEcosystem, removed: [] },
         update.indexData.linkChanges.onEcosystem

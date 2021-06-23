@@ -24,6 +24,7 @@ import {
   GetPerspectiveOptions,
   SearchResult,
   Secured,
+  IndexData,
 } from './interfaces/index';
 
 import { HasChildren, LinkingBehaviorNames } from '../patterns/behaviours/has-links';
@@ -192,11 +193,22 @@ export class Evees implements Client {
     searchOptions: SearchOptions,
     fetchOptions?: GetPerspectiveOptions
   ): Promise<SearchResult> {
-    if (!(this.client as any).explore) {
+    if (!this.client.explore) {
       throw new Error('explore not defined');
     }
 
     return this.client.explore(searchOptions, fetchOptions);
+  }
+
+  async clearExplore(
+    searchOptions: SearchOptions,
+    fetchOptions?: GetPerspectiveOptions
+  ): Promise<void> {
+    if (!this.client.clearExplore) {
+      throw new Error('explore not defined');
+    }
+
+    return this.client.clearExplore(searchOptions, fetchOptions);
   }
 
   async getPerspective(
@@ -902,7 +914,8 @@ export class Evees implements Client {
     perspectiveId: string,
     remoteId?: string,
     guardianId?: string,
-    options: ForkOptions = { recurse: true, detach: false }
+    options: ForkOptions = { recurse: true, detach: false },
+    indexData?: IndexData
   ): Promise<string> {
     const refPerspective: Entity<Signed<Perspective>> = await this.getEntity(perspectiveId);
     const remote = await this.getRemote(remoteId);
@@ -939,6 +952,7 @@ export class Evees implements Client {
       perspective,
       update: {
         perspectiveId: perspective.hash,
+        indexData,
         details: { headId: forkCommitId, guardianId },
       },
     });

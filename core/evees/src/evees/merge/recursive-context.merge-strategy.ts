@@ -49,7 +49,7 @@ export class RecursiveContextMergeStrategy extends SimpleMergeStrategy {
     const promises = children.map(async (child) => {
       const isPerspective = await this.isPattern(child, PerspectiveType);
       if (isPerspective) {
-        this.readPerspective(child, to);
+        await this.readPerspective(child, to);
       } else {
         Promise.resolve();
       }
@@ -76,6 +76,7 @@ export class RecursiveContextMergeStrategy extends SimpleMergeStrategy {
     this.perspectivesByContext = new Map();
     /** by default use the toPerspectiveId as guardian */
     config.guardianId = config.guardianId || toPerspectiveId;
+    config.addOnEcosystem = config.addOnEcosystem || [toPerspectiveId];
 
     await this.readAllSubcontexts(toPerspectiveId, fromPerspectiveId);
     return this.mergePerspectives(toPerspectiveId, fromPerspectiveId, config);
@@ -139,6 +140,9 @@ export class RecursiveContextMergeStrategy extends SimpleMergeStrategy {
           config = {
             guardianId: perspectivesByContext.to,
             ...config,
+            addOnEcosystem: (config.addOnEcosystem ? config.addOnEcosystem : []).concat(
+              perspectivesByContext.to ? perspectivesByContext.to : []
+            ),
           };
 
           await this.mergePerspectives(
@@ -160,7 +164,15 @@ export class RecursiveContextMergeStrategy extends SimpleMergeStrategy {
                 perspectivesByContext.from as string,
                 config.remote,
                 config.guardianId,
-                { recurse: true, detach: config.detach !== undefined ? config.detach : false }
+                { recurse: true, detach: config.detach !== undefined ? config.detach : false },
+                {
+                  linkChanges: {
+                    onEcosystem: {
+                      added: config.addOnEcosystem ? config.addOnEcosystem : [],
+                      removed: [],
+                    },
+                  },
+                }
               );
               return newPerspectiveId;
             } else {
