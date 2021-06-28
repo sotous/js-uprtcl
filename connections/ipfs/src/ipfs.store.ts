@@ -1,5 +1,6 @@
 import CBOR from 'cbor-js';
-import IPFS from 'ipfs';
+import CID from 'cids';
+const IPFS = require('ipfs-core');
 
 import {
   CidConfig,
@@ -110,7 +111,8 @@ export class IpfsStore extends Connection implements EntityRemote {
     if (!hash) throw new Error('hash undefined or empty');
 
     try {
-      const raw = await promiseWithTimeout(this.client.dag.get(hash), 10000);
+      const cid = new CID(hash);
+      const raw = await this.client.dag.get(cid, 10000);
       const forceBuffer = Uint8Array.from(raw.value);
       let object = CBOR.decode(forceBuffer.buffer);
       if (LOGINFO) {
