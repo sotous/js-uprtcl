@@ -152,7 +152,6 @@ export class EveesBlockchain implements ClientRemote {
     if (mutation.newPerspectives) {
       await Promise.all(
         mutation.newPerspectives.map(async (newPerspective) => {
-          await this.persistPerspectiveEntity(newPerspective.perspective);
           eveesData[newPerspective.perspective.hash] = newPerspective.update.details;
         })
       );
@@ -169,6 +168,10 @@ export class EveesBlockchain implements ClientRemote {
       mutation.deletedPerspectives.map((toDelete) => {
         delete eveesData[toDelete];
       });
+    }
+
+    if (mutation.entities) {
+      await this.entityRemote.persistEntities(mutation.entities);
     }
 
     const eveesEntity = await this.entityResolver.hashObject(
@@ -196,7 +199,6 @@ export class EveesBlockchain implements ClientRemote {
       remote: secured.object.payload.remote,
     });
     await this.entityRemote.persistEntity(perspective);
-
     this.logger.log('[ETH] persistPerspectiveEntity - added to IPFS', perspective.hash);
 
     if (secured.hash && secured.hash != perspective.hash) {
