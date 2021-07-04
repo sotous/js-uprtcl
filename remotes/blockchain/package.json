@@ -18,7 +18,8 @@
     "@uprtcl/evees-ui": "^0.2.0",
     "@uprtcl/ipfs-provider": "^0.2.0",
     "dexie": "^3.0.2",
-    "lit-html": "^1.1.2"
+    "lit-html": "^1.1.2",
+    "lodash": "^4.17.15"
   },
   "devDependencies": {
     "@open-wc/testing": "^2.5.6",

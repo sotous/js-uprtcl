@@ -1,3 +1,4 @@
+import lodash from 'lodash';
 import { html, TemplateResult } from 'lit-element';
 
 import {
@@ -160,7 +161,7 @@ export class EveesBlockchain implements ClientRemote {
     if (mutation.updates) {
       mutation.updates.map((update) => {
         const current = eveesData[update.perspectiveId];
-        eveesData[update.perspectiveId] = { ...current, ...update.details, ...update.indexData };
+        eveesData[update.perspectiveId] = lodash.merge(current, update.details, update.indexData); 
       });
     }
 
