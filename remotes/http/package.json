@@ -15,8 +15,7 @@
     "@uprtcl/ethereum-provider": "^0.2.0",
     "@uprtcl/evees": "^0.2.0",
     "@uprtcl/evees-ui": "^0.2.0",
-    "@uprtcl/http-provider": "^0.2.0",
-    "lit-html": "^1.1.2"
+    "@uprtcl/http-provider": "^0.2.0"
   },
   "devDependencies": {
     "@open-wc/testing": "^2.5.6",
