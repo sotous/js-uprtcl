@@ -8,6 +8,7 @@
     "core/common-ui",
     "modules/documents",
     "remotes/http",
+    "remotes/http-ui",
     "remotes/ethereum",
     "remotes/blockchain"
   ],
