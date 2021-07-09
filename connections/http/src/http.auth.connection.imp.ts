@@ -1,8 +1,9 @@
 import { Logger } from '@uprtcl/evees';
 import { HttpAuthentication } from './auth/http.authentication';
-import { AuthTokenStorage } from './auth/http.token.store';
+import { AuthTokenStorageImp } from './auth/http.token.store.imp';
 import { HttpAuthenticatedConnection } from './http.auth.connection.if';
 import { GetResult, PostResult } from './http.connection';
+import fetch, { Headers } from 'node-fetch';
 
 const LOG = false;
 
@@ -11,7 +12,7 @@ const LOG = false;
 export class HttpAuthenticatedConnectionImp implements HttpAuthenticatedConnection {
   logger = new Logger('HTTP CONNECTION');
 
-  tokenStore!: AuthTokenStorage;
+  tokenStore!: AuthTokenStorageImp;
 
   constructor(
     readonly host: string,
@@ -20,7 +21,7 @@ export class HttpAuthenticatedConnectionImp implements HttpAuthenticatedConnecti
     userStorageId?: string
   ) {
     if (tokenStorageId && userStorageId) {
-      this.tokenStore = new AuthTokenStorage(tokenStorageId, userStorageId);
+      this.tokenStore = new AuthTokenStorageImp(tokenStorageId, userStorageId);
     }
   }
 
@@ -59,16 +60,14 @@ export class HttpAuthenticatedConnectionImp implements HttpAuthenticatedConnecti
     this.tokenStore.authToken = undefined;
   }
 
-  get headers(): HeadersInit {
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-    };
+  get headers(): Headers {
+    const meta = [['Content-Type', 'application/json']];
 
     if (this.tokenStore && this.tokenStore.authToken) {
-      headers['Authorization'] = this.tokenStore.authToken;
+      meta.push(['Authorization', this.tokenStore.authToken]);
     }
 
-    return headers;
+    return new Headers(meta);
   }
 
   public async get<T>(url: string): Promise<T> {
@@ -123,12 +122,11 @@ export class HttpAuthenticatedConnectionImp implements HttpAuthenticatedConnecti
 
   public async delete(url: string, body: any = {}): Promise<PostResult> {
     if (LOG) this.logger.log('[HTTP DELETE]', this.host + url);
+
+    this.headers.append('Accept', 'application/json');
     return fetch(url, {
       method: 'DELETE',
-      headers: {
-        ...this.headers,
-        Accept: 'application/json',
-      },
+      headers: this.headers,
       body: JSON.stringify(body),
     })
       .then((response) => {
@@ -142,12 +140,11 @@ export class HttpAuthenticatedConnectionImp implements HttpAuthenticatedConnecti
 
   public async putOrPost(url: string, body: any, method: string): Promise<PostResult> {
     if (LOG) this.logger.log(`[HTTP ${method}]`, url, body);
+
+    this.headers.append('Accept', 'application/json');
     return fetch(this.host + url, {
       method: method,
-      headers: {
-        ...this.headers,
-        Accept: 'application/json',
-      },
+      headers: this.headers,
       body: JSON.stringify(body),
     })
       .then((response) => {
