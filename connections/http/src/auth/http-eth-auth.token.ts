@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 
-import { AuthTokenStorage } from './http.token.store';
+import { AuthTokenStorageImp } from './http.token.store.imp';
 import { HttpAuthentication, JwtToken } from './http.authentication';
 import { HttpAuthenticatedConnectionImp } from '../http.auth.connection.imp';
 import { HttpConnection } from '../http.connection';
@@ -10,11 +10,11 @@ export const loginMessage = (nonce: string) => {
 };
 
 export class HttpEthToken implements HttpAuthentication {
-  store: AuthTokenStorage;
+  store: AuthTokenStorageImp;
   connection: HttpConnection;
 
   constructor(public host) {
-    this.store = new AuthTokenStorage('ETH_AUTH_TOKEN', 'ETH_USER_ID');
+    this.store = new AuthTokenStorageImp('ETH_AUTH_TOKEN', 'ETH_USER_ID');
     this.connection = new HttpAuthenticatedConnectionImp(host);
   }
 

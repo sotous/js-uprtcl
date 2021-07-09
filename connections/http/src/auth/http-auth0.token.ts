@@ -1,6 +1,6 @@
 import { Auth0Client, Auth0ClientOptions } from '@auth0/auth0-spa-js';
 
-import { AuthTokenStorage } from './http.token.store';
+import { AuthTokenStorageImp } from './http.token.store.imp';
 import { HttpAuthentication, JwtToken } from './http.authentication';
 
 export const loginMessage = (nonce: string) => {
@@ -8,11 +8,11 @@ export const loginMessage = (nonce: string) => {
 };
 
 export class HttpAuth0Token implements HttpAuthentication {
-  store: AuthTokenStorage;
+  store: AuthTokenStorageImp;
   auth0: Auth0Client;
 
   constructor(auth0Config: Auth0ClientOptions) {
-    this.store = new AuthTokenStorage('ETH_AUTH_TOKEN', 'ETH_USER_ID');
+    this.store = new AuthTokenStorageImp('ETH_AUTH_TOKEN', 'ETH_USER_ID');
     this.auth0 = new Auth0Client(auth0Config);
   }
 
