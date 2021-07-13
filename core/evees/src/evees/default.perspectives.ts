@@ -14,7 +14,7 @@ export const snapDefaultPerspective = async (
   const creatorId = perspective.creatorId
     ? perspective.creatorId
     : remote.userId
-    ? remote.userId
+    ? remote.userId.toLowerCase()
     : '';
   const timestamp = perspective.timestamp !== undefined ? perspective.timestamp : Date.now();
   const path = perspective.path !== undefined ? perspective.path : remote.defaultPath;
@@ -61,7 +61,7 @@ export const getHome = async (
   const remoteHome: Perspective = {
     remote: remote.id,
     path: remote.defaultPath,
-    creatorId,
+    creatorId: creatorId.toLowerCase(),
     timestamp: 0,
     context: `${creatorId}.home`,
   };
