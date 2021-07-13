@@ -1,40 +1,12 @@
 import { ethers } from 'ethers';
+import { HttpAuthentication } from './http.authentication';
 
-import { AuthTokenStorageImp } from './http.token.store.imp';
-import { HttpAuthentication, JwtToken } from './http.authentication';
-import { HttpAuthenticatedConnectionImp } from '../http.auth.connection.imp';
-import { HttpConnection } from '../http.connection';
+export interface Wallet {
+    address: string;
+    instance: ethers.Wallet | ethers.Signer
+}
 
-export const loginMessage = (nonce: string) => {
-  return `Login to Intercreativity \n\nnonce:${nonce}`;
-};
-
-export class HttpEthToken implements HttpAuthentication {
-  store: AuthTokenStorageImp;
-  connection: HttpConnection;
-
-  constructor(public host) {
-    this.store = new AuthTokenStorageImp('ETH_AUTH_TOKEN', 'ETH_USER_ID');
-    this.connection = new HttpAuthenticatedConnectionImp(host);
-  }
-
-  async obtainToken(): Promise<JwtToken> {
-    await window['ethereum'].enable();
-    const provider = new ethers.providers.Web3Provider(window['ethereum']);
-
-    const signer = provider.getSigner();
-    const userId = (await signer.getAddress()).toLocaleLowerCase();
-
-    const nonce = await this.connection.get<string>(`/user/${userId}/nonce`);
-
-    const signature = await signer.signMessage(loginMessage(nonce));
-    const result = await this.connection.getWithPut<{ jwt: string }>(`/user/${userId}/authorize`, {
-      signature,
-    });
-
-    return {
-      userId,
-      jwt: result.jwt,
-    };
-  }
+// Abstraction for HttpEthToken.
+export interface HttpEthToken extends HttpAuthentication {
+    init(): Promise<Wallet>
 }
