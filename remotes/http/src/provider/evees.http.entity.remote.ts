@@ -2,6 +2,7 @@ import {
   Entity,
   EntityCreate,
   EntityRemote,
+  EveesMutationCreate,
   hashObject,
   CidConfig,
   Logger,
@@ -96,5 +97,11 @@ export class HttpEntityRemote implements EntityRemote {
   async getEntity<T = any>(hash: string): Promise<Entity<T>> {
     const entities = await this.getEntities([hash]);
     return entities[0];
+  }
+
+  async updateSu(mutation: EveesMutationCreate): Promise<any> {
+    await this.connection.put(`/update-su`, {
+      mutation
+    });
   }
 }
